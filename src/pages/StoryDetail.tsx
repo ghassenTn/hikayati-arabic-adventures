@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { BookOpen, Edit, Image, Palette, Gamepad, Save, ArrowLeft } from "lucide-react";
 import { getStoryById, updateStory } from "@/lib/db";
 import { generateImagePrompt, generateImage, generateGameContent, generateColoringImage } from "@/lib/gemini";
+import { GeminiContext } from "@/App";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -15,6 +17,7 @@ const StoryDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { apiKey } = useContext(GeminiContext);
   
   const [story, setStory] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -218,8 +221,9 @@ const StoryDetail = () => {
         img.src = coloringImage;
       } else {
         // Reset the tab to refresh the canvas with the default drawing
-        activeTab === "coloring" && canvasRef.current && canvasRef.current.getContext("2d") && setActiveTab("other");
-        setTimeout(() => setActiveTab("coloring"), 10);
+        const currentTab = activeTab;
+        setActiveTab("story");
+        setTimeout(() => setActiveTab(currentTab), 10);
       }
     }
   };
@@ -342,7 +346,7 @@ const StoryDetail = () => {
       
       // Reset the canvas to show the new coloring image
       if (activeTab === "coloring") {
-        setActiveTab("other");
+        setActiveTab("story");
         setTimeout(() => setActiveTab("coloring"), 10);
       }
     } catch (error) {
@@ -587,3 +591,4 @@ const StoryDetail = () => {
 };
 
 export default StoryDetail;
+

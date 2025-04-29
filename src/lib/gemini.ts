@@ -1,9 +1,12 @@
 import { toast } from "@/components/ui/use-toast";
+import { GoogleGenAI, Modality } from "@google/genai";
 
-const API_KEY = "YOUR_GEMINI_API_KEY"; // This should be user-provided in a real application
-
-export const generateStoryWithGemini = async (subject: string, hero: string): Promise<string> => {
+export const generateStoryWithGemini = async (subject: string, hero: string, apiKey: string): Promise<string> => {
   try {
+    if (!apiKey) {
+      throw new Error("No API key provided");
+    }
+    
     // For demonstration, we'll simulate the API call
     // In a real app, you would make an actual API call to Google's Gemini API
     console.log(`Generating story about ${subject} with hero ${hero}`);
@@ -67,32 +70,18 @@ export const generateImagePrompt = async (storyContent: string): Promise<string>
   }
 };
 
-export const generateImage = async (prompt: string): Promise<string> => {
+export const generateImage = async (prompt: string, apiKey?: string): Promise<string> => {
   try {
     console.log("Generating image with prompt:", prompt);
     
-    // In a production environment, you would need to make this call through a backend service
-    // that keeps your API key secure. For a demo, we'll use a placeholder approach.
-    
-    // Uncomment the code below if you have a proper backend service to handle this
-    /*
-    const response = await fetch("/api/generate-image", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error("Failed to generate image");
+    if (apiKey) {
+      // Here we would use the Gemini API with the provided key
+      console.log("Using provided API key for image generation");
+      // This would be the actual implementation with Gemini API
+      
+      // For now, we'll use a placeholder
+      console.log("Simulating Gemini API for image generation");
     }
-    
-    const data = await response.json();
-    return data.imageUrl;
-    */
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -112,12 +101,18 @@ export const generateImage = async (prompt: string): Promise<string> => {
   }
 };
 
-export const generateColoringImage = async (storyContent: string): Promise<string> => {
+export const generateColoringImage = async (storyContent: string, apiKey?: string): Promise<string> => {
   try {
     console.log("Generating coloring page from story");
     
-    // Similar to the image generation, this would be handled via a backend in production
-    // Instead of complex SVG, we'll use a placeholder for the demo
+    if (apiKey) {
+      // Here we would use the Gemini API with the provided key
+      console.log("Using provided API key for coloring image generation");
+      // This would be the actual implementation with Gemini API
+      
+      // For now, we'll use a placeholder
+      console.log("Simulating Gemini API for coloring image generation");
+    }
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -168,39 +163,22 @@ export const generateGameContent = async (storyContent: string): Promise<string[
   }
 };
 
-// This is where we would implement the backend-ready Gemini API integration
-// In a real application, this code would be in a server-side environment
-
-/*
-// This is for reference only - would be used in a backend environment
-import { GoogleGenAI, Modality } from "@google/genai";
-
-export const generateImageWithGeminiBackend = async (prompt: string): Promise<string> => {
+// Function that would be used for actual Gemini API integration
+export const generateImageWithGemini = async (prompt: string, apiKey: string): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp-image-generation",
-      contents: prompt,
-      config: {
-        responseModalities: [Modality.TEXT, Modality.IMAGE],
-      },
-    });
-    
-    // Process the response to extract the image
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        const imageData = part.inlineData.data;
-        // In a real backend, you would save this image to storage
-        // and return a URL to access it
-        return `data:image/png;base64,${imageData}`;
-      }
+    if (!apiKey) {
+      throw new Error("No API key provided");
     }
+
+    // In a production environment, you would need to make this call through a backend service
+    // that keeps your API key secure. For a demo, we'll use a placeholder approach.
+    console.log("Would use Gemini API with provided key to generate image from prompt:", prompt);
     
-    throw new Error("No image generated");
+    // Placeholder return for frontend development
+    return "https://placehold.co/600x400/9b87f5/ffffff?text=Generated+Story+Image";
+    
   } catch (error) {
     console.error("Error generating image with Gemini:", error);
     throw error;
   }
 };
-*/
