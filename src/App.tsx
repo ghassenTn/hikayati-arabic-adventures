@@ -18,12 +18,12 @@ export const GeminiContext = createContext<{
   apiKey: string;
   setApiKey: (key: string) => void;
 }>({
-  apiKey: "",
+  apiKey: "AIzaSyAY7GX2ACK7O4TsITnICn21bYgywQL5LyE", // Initialize with the provided API key
   setApiKey: () => {},
 });
 
 const App = () => {
-  const [apiKey, setApiKey] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string>("AIzaSyAY7GX2ACK7O4TsITnICn21bYgywQL5LyE"); // Initialize with the provided API key
   
   return (
     <QueryClientProvider client={queryClient}>

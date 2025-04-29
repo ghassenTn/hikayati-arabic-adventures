@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -469,7 +468,7 @@ const StoryDetail = () => {
                         </>
                       ) : (
                         <>
-                          <Image className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                          <LucideImage className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
                           إنشاء صورة جديدة
                         </>
                       )}
