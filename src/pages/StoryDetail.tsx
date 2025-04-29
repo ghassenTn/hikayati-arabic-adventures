@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { BookOpen, Edit, Image, Palette, Gamepad, Save, ArrowLeft } from "lucide-react";
+import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft } from "lucide-react";
+import { Image as LucideImage } from "lucide-react"; // Rename the lucide Image to avoid conflict
 import { getStoryById, updateStory } from "@/lib/db";
 import { generateImagePrompt, generateImage, generateGameContent, generateColoringImage } from "@/lib/gemini";
 import { GeminiContext } from "@/App";
@@ -77,7 +78,7 @@ const StoryDetail = () => {
         
         if (coloringImage) {
           // Draw the generated coloring image if available
-          const img = new Image();
+          const img = new window.Image(); // Use window.Image instead of Image
           img.onload = () => {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           };
@@ -214,7 +215,7 @@ const StoryDetail = () => {
       
       // Redraw the outline or coloring image
       if (coloringImage) {
-        const img = new Image();
+        const img = new window.Image(); // Use window.Image instead of Image
         img.onload = () => {
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -300,7 +301,7 @@ const StoryDetail = () => {
     
     try {
       const imagePrompt = await generateImagePrompt(story.content);
-      const imageUrl = await generateImage(imagePrompt);
+      const imageUrl = await generateImage(imagePrompt, apiKey);
       
       setStoryImage(imageUrl);
       
@@ -338,7 +339,7 @@ const StoryDetail = () => {
     setIsGeneratingColoringPage(true);
     
     try {
-      const coloringImageUrl = await generateColoringImage(story.content);
+      const coloringImageUrl = await generateColoringImage(story.content, apiKey);
       setColoringImage(coloringImageUrl);
       
       toast({
@@ -402,7 +403,7 @@ const StoryDetail = () => {
                 القصة
               </TabsTrigger>
               <TabsTrigger value="image" className="flex items-center">
-                <Image className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                <LucideImage className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 الصور
               </TabsTrigger>
               <TabsTrigger value="coloring" className="flex items-center">
