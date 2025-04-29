@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { BookOpen, Edit, Image, ColorPicker, Gamepad, Save, ArrowLeft } from "lucide-react";
+import { BookOpen, Edit, Image, Palette, Gamepad, Save, ArrowLeft } from "lucide-react";
 import { getStoryById, updateStory } from "@/lib/db";
 import { generateImagePrompt, generateImage, generateGameContent } from "@/lib/gemini";
 import Navbar from "@/components/layout/Navbar";
@@ -350,7 +349,7 @@ const StoryDetail = () => {
                 الصور
               </TabsTrigger>
               <TabsTrigger value="coloring" className="flex items-center">
-                <ColorPicker className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                <Palette className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 التلوين
               </TabsTrigger>
               <TabsTrigger value="games" className="flex items-center">
