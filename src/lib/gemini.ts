@@ -1,6 +1,5 @@
-
 import { toast } from "@/components/ui/use-toast";
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 export const generateStoryWithGemini = async (subject: string, hero: string, apiKey: string): Promise<string> => {
   try {
@@ -9,8 +8,7 @@ export const generateStoryWithGemini = async (subject: string, hero: string, api
     }
     
     // Initialize the Gemini API client with the provided API key
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const genAI = new GoogleGenAI({apiKey});
     
     console.log(`Generating story about ${subject} with hero ${hero}`);
     
@@ -79,7 +77,7 @@ export const generateImage = async (prompt: string, apiKey?: string): Promise<st
     
     if (apiKey) {
       // Initialize the Gemini API client
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new GoogleGenAI({apiKey});
       // Note: Gemini API doesn't directly support image generation at the moment,
       // but we can prepare for when it does or use a different Google API
       console.log("Using provided API key for image generation:", apiKey.substring(0, 5) + "...");
@@ -109,7 +107,7 @@ export const generateColoringImage = async (storyContent: string, apiKey?: strin
     
     if (apiKey) {
       // Initialize the Gemini API client
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const genAI = new GoogleGenAI({apiKey});
       console.log("Using provided API key for coloring image generation:", apiKey.substring(0, 5) + "...");
     }
     
@@ -168,7 +166,7 @@ export const generateImageWithGemini = async (prompt: string, apiKey: string): P
     }
 
     // Initialize the Gemini API client
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const genAI = new GoogleGenAI({apiKey});
     console.log("Using Gemini API with provided key to generate image from prompt:", prompt);
     
     // Placeholder return for frontend development
