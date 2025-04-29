@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 import { GoogleGenAI, Modality } from "@google/genai";
 
@@ -77,10 +78,14 @@ export const generateImage = async (prompt: string, apiKey?: string): Promise<st
     if (apiKey) {
       // Here we would use the Gemini API with the provided key
       console.log("Using provided API key for image generation");
-      // This would be the actual implementation with Gemini API
       
-      // For now, we'll use a placeholder
-      console.log("Simulating Gemini API for image generation");
+      try {
+        // This is a placeholder for actual Gemini API integration
+        // In a real implementation, we would use the GoogleGenAI client
+        console.log("Simulating Gemini API for image generation");
+      } catch (error) {
+        console.error("Error with Gemini API:", error);
+      }
     }
     
     // Simulate API delay
@@ -108,10 +113,13 @@ export const generateColoringImage = async (storyContent: string, apiKey?: strin
     if (apiKey) {
       // Here we would use the Gemini API with the provided key
       console.log("Using provided API key for coloring image generation");
-      // This would be the actual implementation with Gemini API
       
-      // For now, we'll use a placeholder
-      console.log("Simulating Gemini API for coloring image generation");
+      try {
+        // This is a placeholder for actual Gemini API integration
+        console.log("Simulating Gemini API for coloring image generation");
+      } catch (error) {
+        console.error("Error with Gemini API:", error);
+      }
     }
     
     // Simulate API delay
@@ -163,7 +171,6 @@ export const generateGameContent = async (storyContent: string): Promise<string[
   }
 };
 
-// Function that would be used for actual Gemini API integration
 export const generateImageWithGemini = async (prompt: string, apiKey: string): Promise<string> => {
   try {
     if (!apiKey) {

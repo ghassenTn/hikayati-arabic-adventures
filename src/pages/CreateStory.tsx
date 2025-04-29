@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import { generateStoryWithGemini } from "@/lib/gemini";
 import { addStory } from "@/lib/db";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { GeminiContext } from "@/App";
 
 const CreateStory = () => {
   const [subject, setSubject] = useState("");
@@ -24,6 +25,7 @@ const CreateStory = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { apiKey } = useContext(GeminiContext);
 
   const handleGenerateStory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +42,7 @@ const CreateStory = () => {
     setIsGenerating(true);
     
     try {
-      const generatedStory = await generateStoryWithGemini(subject, hero);
+      const generatedStory = await generateStoryWithGemini(subject, hero, apiKey);
       setContent(generatedStory);
       
       // Auto-generate a title if not provided

@@ -216,7 +216,9 @@ const StoryDetail = () => {
       if (coloringImage) {
         const img = new Image();
         img.onload = () => {
-          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
         };
         img.src = coloringImage;
       } else {
@@ -591,4 +593,3 @@ const StoryDetail = () => {
 };
 
 export default StoryDetail;
-
