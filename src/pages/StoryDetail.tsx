@@ -5,13 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft } from "lucide-react";
+import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft, Puzzle } from "lucide-react";
 import { Image as LucideImage } from "lucide-react"; // Rename the lucide Image to avoid conflict
 import { getStoryById, updateStory } from "@/lib/db";
-import { generateImagePrompt, generateImage, generateGameContent, generateColoringImage } from "@/lib/gemini";
+import { 
+  generateImagePrompt, 
+  generateImage, 
+  generateGameContent, 
+  generateColoringImage,
+  generateWordSearchPuzzle
+} from "@/lib/gemini";
 import { GeminiContext } from "@/App";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import WordSearchPuzzle from "@/components/activities/WordSearchPuzzle";
 
 const StoryDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -363,6 +370,12 @@ const StoryDetail = () => {
     }
   };
   
+  // Generate a word search puzzle based on story content
+  const handleGenerateWordSearchPuzzle = async () => {
+    if (!story) return;
+    return generateWordSearchPuzzle(story.content);
+  };
+  
   // Check if all pairs have been matched
   const isGameComplete = matchingCards.length > 0 && matchedPairs.length === matchingCards.length;
   
@@ -408,6 +421,10 @@ const StoryDetail = () => {
               <TabsTrigger value="coloring" className="flex items-center">
                 <Palette className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 التلوين
+              </TabsTrigger>
+              <TabsTrigger value="wordsearch" className="flex items-center">
+                <Puzzle className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                البحث عن الكلمات
               </TabsTrigger>
               <TabsTrigger value="games" className="flex items-center">
                 <Gamepad className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
@@ -548,6 +565,15 @@ const StoryDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="wordsearch" className="mt-0">
+              {story && (
+                <WordSearchPuzzle 
+                  storyContent={story.content}
+                  onGeneratePuzzle={handleGenerateWordSearchPuzzle}
+                />
+              )}
             </TabsContent>
             
             <TabsContent value="games" className="mt-0">

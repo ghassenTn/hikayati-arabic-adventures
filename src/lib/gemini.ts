@@ -159,6 +159,105 @@ export const generateGameContent = async (storyContent: string): Promise<string[
   }
 };
 
+export const generateWordSearchPuzzle = async (storyContent: string): Promise<{grid: string[][], words: string[]}> => {
+  try {
+    console.log("Generating word search puzzle from story");
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Extract unique words from the story content (Arabic words 3+ letters long)
+    const allWords = storyContent.split(/\s+/)
+      .map(word => word.replace(/[^\u0600-\u06FF]/g, '')) // Keep only Arabic characters
+      .filter(word => word.length >= 3)
+      .filter((word, index, self) => self.indexOf(word) === index); // Remove duplicates
+    
+    // Take up to 8 words for the puzzle
+    const selectedWords = allWords.slice(0, 8);
+    
+    // Create a 10x10 grid for the word search
+    const size = 10;
+    const grid = Array(size).fill(0).map(() => Array(size).fill(''));
+    const arabicChars = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'.split('');
+    
+    // Fill grid with random Arabic characters
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        grid[i][j] = arabicChars[Math.floor(Math.random() * arabicChars.length)];
+      }
+    }
+    
+    // Directions for word placement (right-to-left for Arabic)
+    const directions = [
+      [-1, 0],  // Up
+      [1, 0],   // Down
+      [0, -1],  // Right-to-left (for Arabic)
+      [0, 1],   // Left-to-right
+      [-1, -1], // Up-right
+      [-1, 1],  // Up-left
+      [1, -1],  // Down-right
+      [1, 1]    // Down-left
+    ];
+    
+    // Place words in the grid
+    for (const word of selectedWords) {
+      let placed = false;
+      let attempts = 0;
+      const maxAttempts = 100;
+      
+      while (!placed && attempts < maxAttempts) {
+        attempts++;
+        
+        // Random starting position and direction
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        const row = Math.floor(Math.random() * size);
+        const col = Math.floor(Math.random() * size);
+        
+        // Check if word fits at this position and direction
+        let fits = true;
+        for (let i = 0; i < word.length; i++) {
+          const r = row + i * direction[0];
+          const c = col + i * direction[1];
+          
+          if (r < 0 || r >= size || c < 0 || c >= size) {
+            fits = false;
+            break;
+          }
+          
+          if (grid[r][c] !== '' && grid[r][c] !== word[i]) {
+            fits = false;
+            break;
+          }
+        }
+        
+        // Place the word if it fits
+        if (fits) {
+          for (let i = 0; i < word.length; i++) {
+            const r = row + i * direction[0];
+            const c = col + i * direction[1];
+            grid[r][c] = word[i];
+          }
+          placed = true;
+        }
+      }
+    }
+    
+    return {
+      grid,
+      words: selectedWords
+    };
+    
+  } catch (error) {
+    console.error("Error generating word search puzzle:", error);
+    toast({
+      title: "خطأ في إنشاء لغز الكلمات",
+      description: "حدث خطأ أثناء محاولة إنشاء لغز الكلمات.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
+
 export const generateImageWithGemini = async (prompt: string, apiKey: string): Promise<string> => {
   try {
     if (!apiKey) {
