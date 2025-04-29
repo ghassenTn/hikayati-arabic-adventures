@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 
 const API_KEY = "YOUR_GEMINI_API_KEY"; // This should be user-provided in a real application
@@ -70,14 +69,36 @@ export const generateImagePrompt = async (storyContent: string): Promise<string>
 
 export const generateImage = async (prompt: string): Promise<string> => {
   try {
-    // For demonstration, we'll return a placeholder image
-    // In a real app, you would call a text-to-image API like Stable Diffusion or DALL-E
     console.log("Generating image with prompt:", prompt);
+    
+    // In a production environment, you would need to make this call through a backend service
+    // that keeps your API key secure. For a demo, we'll use a placeholder approach.
+    
+    // Uncomment the code below if you have a proper backend service to handle this
+    /*
+    const response = await fetch("/api/generate-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to generate image");
+    }
+    
+    const data = await response.json();
+    return data.imageUrl;
+    */
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Return a placeholder image
+    // Since we can't actually call Gemini directly from the browser (CORS, API key security)
+    // we'll use a placeholder image. In a real app, this would be handled via a backend service
     return "https://placehold.co/600x400/9b87f5/ffffff?text=Generated+Story+Image";
     
   } catch (error) {
@@ -85,6 +106,30 @@ export const generateImage = async (prompt: string): Promise<string> => {
     toast({
       title: "خطأ في إنشاء الصورة",
       description: "حدث خطأ أثناء محاولة إنشاء الصورة.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
+
+export const generateColoringImage = async (storyContent: string): Promise<string> => {
+  try {
+    console.log("Generating coloring page from story");
+    
+    // Similar to the image generation, this would be handled via a backend in production
+    // Instead of complex SVG, we'll use a placeholder for the demo
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Here we would call Gemini to generate a flat, line art image suitable for coloring
+    return "https://placehold.co/600x400/ffffff/000000?text=Coloring+Page+Outline";
+    
+  } catch (error) {
+    console.error("Error generating coloring image:", error);
+    toast({
+      title: "خطأ في إنشاء صفحة التلوين",
+      description: "حدث خطأ أثناء محاولة إنشاء صفحة التلوين.",
       variant: "destructive",
     });
     throw error;
@@ -122,3 +167,40 @@ export const generateGameContent = async (storyContent: string): Promise<string[
     throw error;
   }
 };
+
+// This is where we would implement the backend-ready Gemini API integration
+// In a real application, this code would be in a server-side environment
+
+/*
+// This is for reference only - would be used in a backend environment
+import { GoogleGenAI, Modality } from "@google/genai";
+
+export const generateImageWithGeminiBackend = async (prompt: string): Promise<string> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp-image-generation",
+      contents: prompt,
+      config: {
+        responseModalities: [Modality.TEXT, Modality.IMAGE],
+      },
+    });
+    
+    // Process the response to extract the image
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        const imageData = part.inlineData.data;
+        // In a real backend, you would save this image to storage
+        // and return a URL to access it
+        return `data:image/png;base64,${imageData}`;
+      }
+    }
+    
+    throw new Error("No image generated");
+  } catch (error) {
+    console.error("Error generating image with Gemini:", error);
+    throw error;
+  }
+};
+*/

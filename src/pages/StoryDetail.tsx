@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { BookOpen, Edit, Image, Palette, Gamepad, Save, ArrowLeft } from "lucide-react";
 import { getStoryById, updateStory } from "@/lib/db";
-import { generateImagePrompt, generateImage, generateGameContent } from "@/lib/gemini";
+import { generateImagePrompt, generateImage, generateGameContent, generateColoringImage } from "@/lib/gemini";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -20,7 +20,9 @@ const StoryDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGeneratingColoringPage, setIsGeneratingColoringPage] = useState(false);
   const [storyImage, setStoryImage] = useState<string | null>(null);
+  const [coloringImage, setColoringImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("story");
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [matchingCards, setMatchingCards] = useState<any[]>([]);
@@ -70,58 +72,67 @@ const StoryDetail = () => {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
         
-        // Draw a simple outline for coloring (alternatively, could use image from story)
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        
-        // Draw a simple house outline
-        // House base
-        ctx.moveTo(100, 300);
-        ctx.lineTo(300, 300);
-        ctx.lineTo(300, 200);
-        ctx.lineTo(200, 100);
-        ctx.lineTo(100, 200);
-        ctx.lineTo(100, 300);
-        
-        // Door
-        ctx.moveTo(175, 300);
-        ctx.lineTo(175, 225);
-        ctx.lineTo(225, 225);
-        ctx.lineTo(225, 300);
-        
-        // Window
-        ctx.moveTo(125, 225);
-        ctx.lineTo(125, 250);
-        ctx.lineTo(150, 250);
-        ctx.lineTo(150, 225);
-        ctx.lineTo(125, 225);
-        
-        // Another window
-        ctx.moveTo(250, 225);
-        ctx.lineTo(250, 250);
-        ctx.lineTo(275, 250);
-        ctx.lineTo(275, 225);
-        ctx.lineTo(250, 225);
-        
-        // Sun
-        ctx.moveTo(350, 50);
-        ctx.arc(350, 50, 30, 0, Math.PI * 2);
-        
-        // Tree
-        ctx.moveTo(50, 300);
-        ctx.lineTo(50, 200);
-        ctx.moveTo(25, 200);
-        ctx.lineTo(75, 200);
-        ctx.moveTo(20, 170);
-        ctx.lineTo(80, 170);
-        ctx.moveTo(30, 140);
-        ctx.lineTo(70, 140);
-        
-        ctx.stroke();
+        if (coloringImage) {
+          // Draw the generated coloring image if available
+          const img = new Image();
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = coloringImage;
+        } else {
+          // Draw a simple outline for coloring (alternatively, could use image from story)
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          
+          // Draw a simple house outline
+          // House base
+          ctx.moveTo(100, 300);
+          ctx.lineTo(300, 300);
+          ctx.lineTo(300, 200);
+          ctx.lineTo(200, 100);
+          ctx.lineTo(100, 200);
+          ctx.lineTo(100, 300);
+          
+          // Door
+          ctx.moveTo(175, 300);
+          ctx.lineTo(175, 225);
+          ctx.lineTo(225, 225);
+          ctx.lineTo(225, 300);
+          
+          // Window
+          ctx.moveTo(125, 225);
+          ctx.lineTo(125, 250);
+          ctx.lineTo(150, 250);
+          ctx.lineTo(150, 225);
+          ctx.lineTo(125, 225);
+          
+          // Another window
+          ctx.moveTo(250, 225);
+          ctx.lineTo(250, 250);
+          ctx.lineTo(275, 250);
+          ctx.lineTo(275, 225);
+          ctx.lineTo(250, 225);
+          
+          // Sun
+          ctx.moveTo(350, 50);
+          ctx.arc(350, 50, 30, 0, Math.PI * 2);
+          
+          // Tree
+          ctx.moveTo(50, 300);
+          ctx.lineTo(50, 200);
+          ctx.moveTo(25, 200);
+          ctx.lineTo(75, 200);
+          ctx.moveTo(20, 170);
+          ctx.lineTo(80, 170);
+          ctx.moveTo(30, 140);
+          ctx.lineTo(70, 140);
+          
+          ctx.stroke();
+        }
       }
     }
-  }, [activeTab]);
+  }, [activeTab, coloringImage]);
   
   // Generate matching game when the tab is selected
   useEffect(() => {
@@ -198,10 +209,18 @@ const StoryDetail = () => {
     if (ctx) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Redraw the outline
-      // This would ideally be a function that redraws the original outline
-      activeTab === "coloring" && canvasRef.current && canvasRef.current.getContext("2d") && setActiveTab("other");
-      setTimeout(() => setActiveTab("coloring"), 10);
+      // Redraw the outline or coloring image
+      if (coloringImage) {
+        const img = new Image();
+        img.onload = () => {
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = coloringImage;
+      } else {
+        // Reset the tab to refresh the canvas with the default drawing
+        activeTab === "coloring" && canvasRef.current && canvasRef.current.getContext("2d") && setActiveTab("other");
+        setTimeout(() => setActiveTab("coloring"), 10);
+      }
     }
   };
   
@@ -303,6 +322,38 @@ const StoryDetail = () => {
       });
     } finally {
       setIsGeneratingImage(false);
+    }
+  };
+  
+  // Generate a coloring page from the story content
+  const handleGenerateColoringPage = async () => {
+    if (!story) return;
+    
+    setIsGeneratingColoringPage(true);
+    
+    try {
+      const coloringImageUrl = await generateColoringImage(story.content);
+      setColoringImage(coloringImageUrl);
+      
+      toast({
+        title: "تم إنشاء صفحة التلوين بنجاح",
+        description: "تم إنشاء صفحة جديدة للتلوين",
+      });
+      
+      // Reset the canvas to show the new coloring image
+      if (activeTab === "coloring") {
+        setActiveTab("other");
+        setTimeout(() => setActiveTab("coloring"), 10);
+      }
+    } catch (error) {
+      console.error("Error generating coloring page:", error);
+      toast({
+        title: "خطأ في إنشاء صفحة التلوين",
+        description: "لم نتمكن من إنشاء صفحة للتلوين. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingColoringPage(false);
     }
   };
   
@@ -440,20 +491,43 @@ const StoryDetail = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="mb-4 flex justify-between items-center">
-                    <div className="color-palette">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleGenerateColoringPage}
+                        disabled={isGeneratingColoringPage}
+                        className="flex items-center"
+                      >
+                        {isGeneratingColoringPage ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary mr-2 rtl:ml-2 rtl:mr-0"></div>
+                            جاري إنشاء صفحة تلوين...
+                          </>
+                        ) : (
+                          <>
+                            <Palette className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                            إنشاء صفحة تلوين جديدة
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button variant="outline" onClick={clearCanvas}>
+                        مسح الرسم
+                      </Button>
+                    </div>
+                    
+                    <div className="color-palette flex gap-2">
                       {colors.map((color) => (
                         <div
                           key={color}
-                          className={`color-option ${selectedColor === color ? 'active' : ''}`}
+                          className={`color-option w-6 h-6 rounded-full cursor-pointer ${
+                            selectedColor === color ? 'ring-2 ring-primary ring-offset-2' : ''
+                          }`}
                           style={{ backgroundColor: color }}
                           onClick={() => setSelectedColor(color)}
                         ></div>
                       ))}
                     </div>
-                    
-                    <Button variant="outline" onClick={clearCanvas}>
-                      مسح الرسم
-                    </Button>
                   </div>
                   
                   <div className="bg-white rounded-lg border overflow-hidden">
