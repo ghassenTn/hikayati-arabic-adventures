@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft, Puzzle } from "lucide-react";
+import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft, Puzzle, HelpCircle } from "lucide-react";
 import { Image as LucideImage } from "lucide-react"; // Rename the lucide Image to avoid conflict
 import { getStoryById, updateStory } from "@/lib/db";
 import { 
@@ -19,6 +19,7 @@ import { GeminiContext } from "@/App";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WordSearchPuzzle from "@/components/activities/WordSearchPuzzle";
+import Quiz from "@/components/activities/Quiz";
 
 const StoryDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -426,6 +427,10 @@ const StoryDetail = () => {
                 <Puzzle className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 البحث عن الكلمات
               </TabsTrigger>
+              <TabsTrigger value="quiz" className="flex items-center">
+                <HelpCircle className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                الأسئلة
+              </TabsTrigger>
               <TabsTrigger value="games" className="flex items-center">
                 <Gamepad className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 الألعاب
@@ -572,6 +577,15 @@ const StoryDetail = () => {
                 <WordSearchPuzzle 
                   storyContent={story.content}
                   onGeneratePuzzle={handleGenerateWordSearchPuzzle}
+                />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="quiz" className="mt-0">
+              {story && (
+                <Quiz 
+                  storyContent={story.content}
+                  apiKey={apiKey}
                 />
               )}
             </TabsContent>

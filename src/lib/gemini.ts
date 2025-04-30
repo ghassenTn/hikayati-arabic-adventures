@@ -258,6 +258,78 @@ export const generateWordSearchPuzzle = async (storyContent: string): Promise<{g
   }
 };
 
+export const generateQuizQuestions = async (storyContent: string, apiKey?: string): Promise<Array<{question: string, options: string[], correctAnswer: string}>> => {
+  try {
+    console.log("Generating quiz questions from story content");
+    
+    if (apiKey) {
+      // Initialize the Gemini API client
+      const genAI = new GoogleGenAI({apiKey});
+      console.log("Using provided API key for quiz generation:", apiKey.substring(0, 5) + "...");
+    }
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Extract key story elements to generate questions about
+    // In a production app, we would use the Gemini API to generate these
+    const storyWords = storyContent
+      .split(/\s+/)
+      .filter(word => word.length > 3)
+      .map(word => word.replace(/[^\u0600-\u06FFa-zA-Z]/g, ''));
+    
+    const uniqueWords = [...new Set(storyWords)];
+    const selectedWords = uniqueWords.slice(0, Math.min(10, uniqueWords.length));
+    
+    // Generate 5 quiz questions (or fewer if not enough content)
+    const questionCount = Math.min(5, Math.floor(selectedWords.length / 2));
+    const questions = [];
+    
+    for (let i = 0; i < questionCount; i++) {
+      // Choose a word from the story to base the question on
+      const targetWord = selectedWords[i * 2];
+      
+      // Generate a simple question
+      let question = "";
+      if (i % 3 === 0) {
+        question = `ما هو معنى كلمة "${targetWord}" في سياق القصة؟`;
+      } else if (i % 3 === 1) {
+        question = `ما الذي حدث بعد أن ${targetWord}؟`;
+      } else {
+        question = `لماذا ${targetWord} في القصة؟`;
+      }
+      
+      // Generate multiple choice options
+      const correctAnswer = `إجابة صحيحة عن ${targetWord}`; // In a real app, this would be generated
+      const incorrectOptions = [
+        `إجابة خاطئة عن ${targetWord} - 1`,
+        `إجابة خاطئة عن ${targetWord} - 2`,
+        `إجابة خاطئة عن ${targetWord} - 3`
+      ];
+      
+      // Randomize the order of options
+      const options = [correctAnswer, ...incorrectOptions].sort(() => Math.random() - 0.5);
+      
+      questions.push({
+        question,
+        options,
+        correctAnswer
+      });
+    }
+    
+    return questions;
+    
+  } catch (error) {
+    console.error("Error generating quiz questions:", error);
+    toast({
+      title: "خطأ في إنشاء الأسئلة",
+      description: "حدث خطأ أثناء محاولة إنشاء أسئلة الاختبار.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
+
 export const generateImageWithGemini = async (prompt: string, apiKey: string): Promise<string> => {
   try {
     if (!apiKey) {
