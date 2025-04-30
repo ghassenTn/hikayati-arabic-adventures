@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllStories } from "@/lib/db";
@@ -77,6 +76,14 @@ const Analytics = () => {
 
   const learningConfig = {
     تعلم: { label: "التقدم في التعلم", color: "#9b87f5" },
+  };
+
+  // Adding the missing config for quiz performance chart
+  const quizConfig = {
+    ممتاز: { label: "ممتاز", color: "#9b87f5" },
+    جيد: { label: "جيد", color: "#E5DEFF" },
+    متوسط: { label: "متوسط", color: "#F97316" },
+    ضعيف: { label: "ضعيف", color: "#ef4444" },
   };
 
   return (
@@ -247,7 +254,7 @@ const Analytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-[400px]">
-                  <ChartContainer>
+                  <ChartContainer config={quizConfig}>
                     <PieChart>
                       <Pie
                         data={quizPerformance}
