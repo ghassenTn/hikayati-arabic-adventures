@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 import { GoogleGenAI } from "@google/genai";
 
@@ -109,13 +110,27 @@ export const generateColoringImage = async (storyContent: string, apiKey?: strin
       // Initialize the Gemini API client
       const genAI = new GoogleGenAI({apiKey});
       console.log("Using provided API key for coloring image generation:", apiKey.substring(0, 5) + "...");
+      
+      // In a real implementation, we would use Gemini to generate a coloring page based on the story content
+      // For now, we'll return a placeholder coloring image for demonstration purposes
     }
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Here we would call an appropriate API to generate a coloring page
-    return "https://placehold.co/600x400/ffffff/000000?text=Coloring+Page+Outline";
+    // Return a simple black and white outline image that's suitable for coloring
+    // In a real implementation, we would generate or fetch actual coloring pages
+    const coloringPages = [
+      "https://cdn.pixabay.com/photo/2020/11/10/01/34/coloring-5728135_1280.png",
+      "https://cdn.pixabay.com/photo/2022/12/10/16/50/owl-7647984_1280.png", 
+      "https://cdn.pixabay.com/photo/2020/03/30/21/46/mandala-4985014_1280.png",
+      "https://cdn.pixabay.com/photo/2020/12/01/19/20/coloring-5795424_1280.png",
+      "https://cdn.pixabay.com/photo/2022/12/17/05/58/coloring-7660674_1280.png"
+    ];
+    
+    // Select a random coloring page from the array
+    const randomIndex = Math.floor(Math.random() * coloringPages.length);
+    return coloringPages[randomIndex];
     
   } catch (error) {
     console.error("Error generating coloring image:", error);

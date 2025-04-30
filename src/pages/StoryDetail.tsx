@@ -353,12 +353,6 @@ const StoryDetail = () => {
         title: "تم إنشاء صفحة التلوين بنجاح",
         description: "تم إنشاء صفحة جديدة للتلوين",
       });
-      
-      // Reset the canvas to show the new coloring image
-      if (activeTab === "coloring") {
-        setActiveTab("story");
-        setTimeout(() => setActiveTab("coloring"), 10);
-      }
     } catch (error) {
       console.error("Error generating coloring page:", error);
       toast({
@@ -519,30 +513,24 @@ const StoryDetail = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="mb-4 flex justify-between items-center">
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={handleGenerateColoringPage}
-                        disabled={isGeneratingColoringPage}
-                        className="flex items-center"
-                      >
-                        {isGeneratingColoringPage ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary mr-2 rtl:ml-2 rtl:mr-0"></div>
-                            جاري إنشاء صفحة تلوين...
-                          </>
-                        ) : (
-                          <>
-                            <Palette className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
-                            إنشاء صفحة تلوين جديدة
-                          </>
-                        )}
-                      </Button>
-                      
-                      <Button variant="outline" onClick={clearCanvas}>
-                        مسح الرسم
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleGenerateColoringPage}
+                      disabled={isGeneratingColoringPage}
+                      className="flex items-center"
+                    >
+                      {isGeneratingColoringPage ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary mr-2 rtl:ml-2 rtl:mr-0"></div>
+                          جاري إنشاء صفحة تلوين...
+                        </>
+                      ) : (
+                        <>
+                          <Palette className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                          إنشاء صفحة تلوين جديدة
+                        </>
+                      )}
+                    </Button>
                     
                     <div className="color-palette flex gap-2">
                       {colors.map((color) => (
@@ -558,16 +546,30 @@ const StoryDetail = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white rounded-lg border overflow-hidden">
-                    <canvas
-                      ref={canvasRef}
-                      className="colored-canvas w-full h-[500px]"
-                      onMouseDown={startDrawing}
-                      onMouseMove={draw}
-                      onMouseUp={endDrawing}
-                      onMouseLeave={endDrawing}
-                    ></canvas>
-                  </div>
+                  {coloringImage ? (
+                    <div className="bg-white rounded-lg border overflow-hidden">
+                      <img 
+                        src={coloringImage} 
+                        alt="صفحة التلوين" 
+                        className="w-full max-h-[600px] object-contain"
+                      />
+                      <div className="p-4 text-center">
+                        <p className="text-muted-foreground mb-2">يمكنك طباعة هذه الصفحة وتلوينها باستخدام أقلامك المفضلة</p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => window.open(coloringImage, '_blank')}
+                          className="mt-2"
+                        >
+                          فتح في نافذة جديدة للطباعة
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-20 bg-secondary/20 rounded-lg">
+                      <h3 className="text-xl font-medium mb-2">لا توجد صفحة تلوين</h3>
+                      <p className="text-muted-foreground mb-4">قم بإنشاء صفحة تلوين جديدة للقصة</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
