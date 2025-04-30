@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, BookPlus } from "lucide-react";
+import { BookOpen, BookPlus, ChartBar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
@@ -22,6 +22,11 @@ export default function Navbar() {
             <li>
               <Link to="/stories" className="text-white hover:text-secondary font-medium">
                 مكتبة القصص
+              </Link>
+            </li>
+            <li>
+              <Link to="/analytics" className="text-white hover:text-secondary font-medium">
+                التحليلات
               </Link>
             </li>
           </ul>

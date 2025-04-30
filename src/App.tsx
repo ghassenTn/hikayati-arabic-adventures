@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import StoryList from "./pages/StoryList";
 import CreateStory from "./pages/CreateStory";
 import StoryDetail from "./pages/StoryDetail";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => {
               <Route path="/stories" element={<StoryList />} />
               <Route path="/create" element={<CreateStory />} />
               <Route path="/story/:id" element={<StoryDetail />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
