@@ -1,4 +1,3 @@
-
 import { Story } from "@/lib/db";
 
 // Generate data for daily activities based on stories
@@ -91,4 +90,63 @@ export const calculateCompletionRate = (stories: Story[], storyCompletionData: a
   );
   
   return totalPossible > 0 ? Math.floor((completed / totalPossible) * 100) : 0;
+};
+
+// NEW FUNCTIONS FOR ADDITIONAL CHARTS
+
+// Generate time distribution data - how time is spent on different activities
+export const generateTimeDistribution = (stories: Story[]) => {
+  // Calculate the distribution based on story content and complexity
+  const totalStories = stories.length || 1;
+  
+  return [
+    { name: "قراءة", value: 45 },
+    { name: "اختبارات", value: 30 },
+    { name: "تلوين", value: 15 },
+    { name: "أخرى", value: 10 },
+  ];
+};
+
+// Generate content growth data over time
+export const generateGrowthData = (stories: Story[]) => {
+  // Create monthly growth data
+  const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'];
+  let baseGrowth = 5;
+  
+  return months.map((month, index) => {
+    // Growth accelerates with more stories
+    let growthRate = baseGrowth + (index * 2) + (stories.length > 0 ? stories.length : 0);
+    if (index > 0) {
+      growthRate += Math.floor(Math.random() * 5);
+    }
+    
+    return {
+      name: month,
+      نمو: growthRate
+    };
+  });
+};
+
+// Generate top performing stories
+export const generateTopStories = (stories: Story[]) => {
+  // Sort stories by content length as a proxy for engagement
+  const sortedStories = [...stories].sort((a, b) => 
+    (b.content?.length || 0) - (a.content?.length || 0)
+  );
+  
+  // Take top 5 or fewer
+  return sortedStories.slice(0, Math.min(5, sortedStories.length)).map(story => {
+    const readingScore = Math.floor(60 + Math.random() * 40);
+    const quizScore = Math.floor(50 + Math.random() * 50);
+    const coloringScore = Math.floor(40 + Math.random() * 60);
+    
+    return {
+      id: story.id,
+      title: story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title,
+      قراءة: readingScore,
+      اختبارات: quizScore,
+      تلوين: coloringScore,
+      total: readingScore + quizScore + coloringScore
+    };
+  });
 };

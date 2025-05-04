@@ -30,7 +30,7 @@ const LearningProgressChart = ({ learningData, learningConfig }: LearningProgres
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[400px]">
+        <div className="h-[700px]">
           <ChartContainer config={learningConfig}>
             <LineChart data={learningData}>
               <CartesianGrid strokeDasharray="3 3" />

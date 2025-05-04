@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft, Puzzle, HelpCircle } from "lucide-react";
+import { BookOpen, Edit, Palette, Gamepad, Save, ArrowLeft, Puzzle, HelpCircle, Star } from "lucide-react";
 import { Image as LucideImage } from "lucide-react"; // Rename the lucide Image to avoid conflict
-import { getStoryById, updateStory } from "@/lib/db";
+import { getStoryById, updateStory, toggleFavorite } from "@/lib/db";
 import { 
   generateImagePrompt, 
-  generateImage, 
+  generateImageWithGemini, 
   generateGameContent, 
   generateColoringImage,
   generateWordSearchPuzzle
@@ -150,7 +150,7 @@ const StoryDetail = () => {
     if (activeTab === "games" && story && matchingCards.length === 0) {
       const generateGame = async () => {
         try {
-          const wordPairs = await generateGameContent(story.content);
+          const wordPairs = await generateGameContent(story.content,apiKey);
           
           // Create card pairs for the matching game
           const cards = wordPairs.flatMap((pair, index) => [
@@ -299,6 +299,32 @@ const StoryDetail = () => {
       });
     }
   };
+  // Handle favorite toggle
+  const handleToggleFavorite = async () => {
+    if (!story?.id) return;
+    
+    try {
+      const updatedStory = await toggleFavorite(story.id);
+      setStory(updatedStory);
+      
+      toast({
+        title: updatedStory.isFavorite 
+          ? "تمت الإضافة إلى المفضلة" 
+          : "تمت الإزالة من المفضلة",
+        description: updatedStory.isFavorite
+          ? "تمت إضافة القصة إلى قائمة المفضلة"
+          : "تمت إزالة القصة من قائمة المفضلة",
+      });
+    } catch (error) {
+      console.error("Error updating favorite status:", error);
+      toast({
+        title: "خطأ في تحديث المفضلة",
+        description: "لم نتمكن من تحديث حالة المفضلة. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   
   // Generate an image for the story
   const handleGenerateImage = async () => {
@@ -307,8 +333,8 @@ const StoryDetail = () => {
     setIsGeneratingImage(true);
     
     try {
-      const imagePrompt = await generateImagePrompt(story.content);
-      const imageUrl = await generateImage(imagePrompt, apiKey);
+      const imagePrompt = await generateImagePrompt(story.content,apiKey);
+      const imageUrl = await generateImageWithGemini(imagePrompt, apiKey);
       
       setStoryImage(imageUrl);
       
@@ -346,7 +372,7 @@ const StoryDetail = () => {
     setIsGeneratingColoringPage(true);
     
     try {
-      const coloringImageUrl = await generateColoringImage(story.content, apiKey);
+      const coloringImageUrl = await generateColoringImage(story.subject, apiKey);
       setColoringImage(coloringImageUrl);
       
       toast({
@@ -368,7 +394,7 @@ const StoryDetail = () => {
   // Generate a word search puzzle based on story content
   const handleGenerateWordSearchPuzzle = async () => {
     if (!story) return;
-    return generateWordSearchPuzzle(story.content);
+    return generateWordSearchPuzzle(story.content,apiKey);
   };
   
   // Check if all pairs have been matched
@@ -401,6 +427,18 @@ const StoryDetail = () => {
               <span>العودة إلى المكتبة</span>
             </Link>
             <h1 className="text-3xl font-bold">{story.title}</h1>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleToggleFavorite}
+                className={story.isFavorite ? "text-amber-500" : ""}
+                title={story.isFavorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
+              >
+                <Star className={`h-5 w-5 ${story.isFavorite ? "fill-amber-500" : ""}`} />
+              </Button>
+              <h1 className="text-3xl font-bold">{story.title}</h1>
+            </div>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

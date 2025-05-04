@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 
 export type Story = {
@@ -8,6 +7,7 @@ export type Story = {
   hero: string;
   content: string;
   image?: string;
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -44,6 +44,7 @@ export const initDB = async (): Promise<IDBDatabase> => {
         });
         store.createIndex("title", "title", { unique: false });
         store.createIndex("createdAt", "createdAt", { unique: false });
+        store.createIndex("isFavorite", "isFavorite", { unique: false });
       }
     };
   });
@@ -59,6 +60,7 @@ export const addStory = async (story: Omit<Story, "id" | "createdAt" | "updatedA
     const now = new Date().toISOString();
     const newStory = { 
       ...story, 
+      isFavorite: story.isFavorite || false,
       createdAt: now, 
       updatedAt: now 
     };
@@ -92,6 +94,22 @@ export const getAllStories = async (): Promise<Story[]> => {
       reject("Error getting stories");
     };
   });
+};
+
+// Get favorite stories
+export const getFavoriteStories = async (): Promise<Story[]> => {
+  try {
+    // Get all stories first
+    const allStories = await getAllStories();
+    
+    // Filter the stories that are marked as favorites
+    const favorites = allStories.filter(story => story.isFavorite === true);
+    
+    return favorites;
+  } catch (error) {
+    console.error("Error loading favorite stories:", error);
+    throw error;
+  }
 };
 
 // Get a story by id
@@ -138,6 +156,21 @@ export const updateStory = async (story: Story): Promise<Story> => {
       reject("Error updating story");
     };
   });
+};
+
+// Toggle story favorite status
+export const toggleFavorite = async (id: number): Promise<Story> => {
+  try {
+    const story = await getStoryById(id);
+    const updatedStory = { 
+      ...story, 
+      isFavorite: !story.isFavorite,
+    };
+    return await updateStory(updatedStory);
+  } catch (error) {
+    console.error("Error toggling favorite:", error);
+    throw new Error("Could not toggle favorite status");
+  }
 };
 
 // Delete a story

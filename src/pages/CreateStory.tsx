@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Save, BookText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { toast, useToast } from "@/components/ui/use-toast";
+import { Loader2, Save, BookText, Wand2, Sparkles } from "lucide-react";
 import { generateStoryWithGemini } from "@/lib/gemini";
 import { addStory } from "@/lib/db";
 import Navbar from "@/components/layout/Navbar";
@@ -22,6 +24,14 @@ const CreateStory = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Enhanced story generation parameters
+  const [genre, setGenre] = useState("fantasy");
+  const [tone, setTone] = useState("adventurous");
+  const [length, setLength] = useState(3); // 1-5 scale
+  const [includeMoral, setIncludeMoral] = useState(true);
+  const [culturalSetting, setCulturalSetting] = useState("universal");
+  const [ageGroup, setAgeGroup] = useState("children");
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,7 +52,20 @@ const CreateStory = () => {
     setIsGenerating(true);
     
     try {
-      const generatedStory = await generateStoryWithGemini(subject, hero, apiKey);
+      // Create a detailed prompt for the AI
+      const prompt = `
+قم بإنشاء قصة مميزة بعنوان "${title || `مغامرة ${hero} في عالم ${subject}`}" تدور أحداثها في عالم ${subject}.
+البطل الرئيسي هو ${hero}، وهو شخصية ${ageGroup === "children" ? "مناسبة للأطفال" : "عامة"}.
+النوع الأدبي: ${genre === "fantasy" ? "خيال" : genre === "sci-fi" ? "خيال علمي" : genre === "realistic" ? "واقعية" : "مغامرات"}.
+النبرة: ${tone === "adventurous" ? "مغامرة" : tone === "educational" ? "تعليمية" : tone === "humorous" ? "كوميدية" : "مثيرة"}.
+الطول: ${length * 20}% من متوسط طول القصص (${length}/5).
+الإعداد الثقافي: ${culturalSetting === "universal" ? "عالمي" : culturalSetting === "middle-eastern" ? "شرقي" : "عربي"}.
+${includeMoral ? "تتضمن قصة درساً أخلاقياً مهماً." : ""}
+القصة يجب أن تكون مبتكرة وممتعة، مع شخصيات متطورة وصراعات شيقة وحل منطقي للصراع.
+ابدأ مباشرة بالقصة دون أي مقدمة أو تفسيرات إضافية.
+`;
+
+      const generatedStory = await generateStoryWithGemini(subject, apiKey,prompt);
       setContent(generatedStory);
       
       // Auto-generate a title if not provided
@@ -86,6 +109,12 @@ const CreateStory = () => {
         subject,
         hero,
         content,
+        // genre,
+        tone,
+        length,
+        includeMoral,
+        culturalSetting,
+        ageGroup
       });
       
       toast({
@@ -118,10 +147,13 @@ const CreateStory = () => {
           {!isEditing ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">قم بتحديد موضوع القصة واسم البطل</CardTitle>
+                <CardTitle className="text-xl flex items-center">
+                  <Wand2 className="h-5 w-5 mr-2 rtl:ml-2 rtl:mr-0" />
+                  قم بتحديد تفاصيل القصة للحصول على أفضل نتيجة
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleGenerateStory} className="space-y-4">
+                <form onSubmit={handleGenerateStory} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="title">عنوان القصة (اختياري)</Label>
                     <Input
@@ -154,6 +186,89 @@ const CreateStory = () => {
                     />
                   </div>
                   
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>النوع الأدبي</Label>
+                      <Select onValueChange={setGenre} defaultValue={genre}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fantasy">خيال</SelectItem>
+                          <SelectItem value="sci-fi">خيال علمي</SelectItem>
+                          <SelectItem value="realistic">قصة واقعية</SelectItem>
+                          <SelectItem value="adventure">مغامرات</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>الفئة العمرية</Label>
+                      <Select onValueChange={setAgeGroup} defaultValue={ageGroup}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="children">أطفال</SelectItem>
+                          <SelectItem value="teens">مراهقون</SelectItem>
+                          <SelectItem value="general">عامة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>النبرة</Label>
+                      <Select onValueChange={setTone} defaultValue={tone}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="adventurous">مغامرة</SelectItem>
+                          <SelectItem value="educational">تعليمية</SelectItem>
+                          <SelectItem value="humorous">كوميدية</SelectItem>
+                          <SelectItem value="mysterious">مثيرة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>الإعداد الثقافي</Label>
+                      <Select onValueChange={setCulturalSetting} defaultValue={culturalSetting}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="universal">عالمي</SelectItem>
+                          <SelectItem value="middle-eastern">شرقي</SelectItem>
+                          <SelectItem value="arabic">عربي</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>طول القصة: {length * 20}%</Label>
+                    <Slider
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={[length]}
+                      onValueChange={(value) => setLength(value[0])}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>قصيرة</span>
+                      <span>متوسطة</span>
+                      <span>طويلة</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <Switch id="moral" checked={includeMoral} onCheckedChange={setIncludeMoral} />
+                    <Label htmlFor="moral">تضمين درس أخلاقي</Label>
+                  </div>
+                  
                   <Button
                     type="submit"
                     className="w-full"
@@ -166,8 +281,8 @@ const CreateStory = () => {
                       </>
                     ) : (
                       <>
-                        <BookText className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0" />
-                        إنشاء القصة
+                        <Sparkles className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0" />
+                        إنشاء القصة الذكية
                       </>
                     )}
                   </Button>

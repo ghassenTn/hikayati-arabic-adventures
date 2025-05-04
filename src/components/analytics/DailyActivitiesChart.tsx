@@ -36,7 +36,7 @@ const DailyActivitiesChart = ({ activityData, activityConfig }: DailyActivitiesC
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[400px]">
+        <div className="h-[700px]">
           <ChartContainer config={activityConfig}>
             <BarChart data={activityData}>
               <CartesianGrid strokeDasharray="3 3" />
