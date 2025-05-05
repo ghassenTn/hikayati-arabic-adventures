@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useContext } from "react";
 import { GeminiContext } from "@/App";
@@ -33,7 +32,7 @@ const Coloring = () => {
   const [activeTab, setActiveTab] = useState<"generate" | "stories">("generate");
   const [stories, setStories] = useState<any[]>([]);
   const [loadingStories, setLoadingStories] = useState(false);
-  const [processingImage, setProcessingImage] = useState<string | null>(null);
+  const [processingImages, setProcessingImages] = useState<string[]>([]);
   
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -172,22 +171,25 @@ const Coloring = () => {
     }
   };
   
-  // Convert image to coloring page
-  const convertToColoringImage = async (imageUrl: string) => {
+  // Modified function to handle story image selection
+  const selectStoryImage = async (imageUrl: string) => {
+    // Add the image to processing state
+    setProcessingImages(prev => [...prev, imageUrl]);
+    
     try {
-      setProcessingImage(imageUrl);
       setIsLoading(true);
       
-      // Extract subject from the image to use as topic
-      const randomTopic = ["قصة", "شخصية كرتونية", "حيوان", "مغامرة", "طبيعة"][Math.floor(Math.random() * 5)];
+      // Extract subject from the story to use for better coloring generation
+      const storyWithImage = stories.find(story => story.image === imageUrl);
+      const subject = storyWithImage?.subject || "قصة";
       
-      // Generate a coloring page using the Gemini API
-      const imageData = await generateColoringImage(randomTopic, apiKey);
-      setColoringImage(imageData);
+      // Generate a coloring page using the Gemini API with the story's subject
+      const coloringImageData = await generateColoringImage(subject, apiKey);
+      setColoringImage(coloringImageData);
       
       toast({
         title: "تم بنجاح",
-        description: "تم إنشاء صورة التلوين الجديدة",
+        description: "تم إنشاء صورة التلوين من القصة",
       });
     } catch (error) {
       console.error("Error converting to coloring image:", error);
@@ -198,7 +200,8 @@ const Coloring = () => {
       });
     } finally {
       setIsLoading(false);
-      setProcessingImage(null);
+      // Remove the image from processing state
+      setProcessingImages(prev => prev.filter(img => img !== imageUrl));
     }
   };
   
@@ -252,9 +255,8 @@ const Coloring = () => {
     }
   };
   
-  const selectStoryImage = (imageUrl: string) => {
-    // Instead of directly using the story image, convert it to a coloring page
-    convertToColoringImage(imageUrl);
+  const isProcessingImage = (imageUrl: string) => {
+    return processingImages.includes(imageUrl);
   };
   
   return (
@@ -392,9 +394,9 @@ const Coloring = () => {
                                   variant="outline"
                                   className="text-xs h-auto py-1 truncate"
                                   onClick={() => selectStoryImage(story.image)}
-                                  disabled={processingImage === story.image}
+                                  disabled={isProcessingImage(story.image) || isLoading}
                                 >
-                                  {processingImage === story.image ? (
+                                  {isProcessingImage(story.image) ? (
                                     <span className="flex items-center">
                                       <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-2"></span>
                                       جاري المعالجة...
@@ -477,10 +479,10 @@ const Coloring = () => {
                     {stories.map((story) => (
                       <div 
                         key={story.id}
-                        className={`aspect-square relative rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity ${processingImage === story.image ? 'opacity-50' : ''}`}
-                        onClick={() => processingImage !== story.image && selectStoryImage(story.image)}
+                        className={`aspect-square relative rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity ${isProcessingImage(story.image) || isLoading ? 'opacity-50' : ''}`}
+                        onClick={() => !isProcessingImage(story.image) && !isLoading && selectStoryImage(story.image)}
                       >
-                        {processingImage === story.image && (
+                        {(isProcessingImage(story.image) || isLoading) && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
                             <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
                           </div>
