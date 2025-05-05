@@ -13,10 +13,11 @@ import CreateStory from "./pages/CreateStory";
 import StoryDetail from "./pages/StoryDetail";
 import Analytics from "./pages/Analytics";
 import Chat from "./pages/Chat";
-import Coloring from "./pages/Coloring"; // Import the new Coloring component
+import Coloring from "./pages/Coloring";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import Activities from "./pages/Activities"; // New import for Activities page
 
 const queryClient = new QueryClient();
 
@@ -61,7 +62,9 @@ const App = () => {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/stories" element={<StoryList />} />
-                  <Route path="/coloring" element={<Coloring />} /> {/* Add new Coloring route */}
+                  <Route path="/coloring" element={<Coloring />} />
+                  <Route path="/activities" element={<Activities />} />
+                  <Route path="/activities/:domain" element={<Activities />} />
                   <Route 
                     path="/create" 
                     element={
