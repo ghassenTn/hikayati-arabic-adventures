@@ -7,6 +7,7 @@ import {
   PlusCircle,
   BarChart,
   MessageCircle,
+  Palette, // Added Palette icon for coloring
   Menu, // Icon for hamburger menu
   X, // Icon for closing mobile menu
   UserCircle, // Placeholder for User Profile/Login
@@ -25,11 +26,11 @@ const Navbar = () => {
     { path: "/", icon: Home, label: "الرئيسية" },
     { path: "/stories", icon: Book, label: "القصص" },
     { path: "/create", icon: PlusCircle, label: "قصة جديدة" },
+    { path: "/coloring", icon: Palette, label: "التلوين" }, // Add coloring link
     { 
       path: "/analytics", 
       icon: BarChart, 
       label: "التحليلات",
-       // Adding beta tag to this item
     },
     { path: "/chat", icon: MessageCircle, label: "المساعد",badge: "Beta" },
   ];

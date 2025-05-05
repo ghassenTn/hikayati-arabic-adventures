@@ -84,7 +84,7 @@ const FreeActivities = () => {
       <div className="container mx-auto px-6">
         <h2 className="text-3xl font-bold text-center mb-4">أنشطة تعليمية مجانية</h2>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          اكتشف مجموعة متنوعة من الأنشطة التعليمية المجانية في مختلف المجالات لتعزيز مهارات الأطفال بطريقة ممتعة
+          اكتشف مجموعة متنوعة من الأنشطة التعليمية المجانية في مختلف الم��الات لتعزيز مهارات الأطفال بطريقة ممتعة
         </p>
         
         <Tabs defaultValue="language" className="w-full max-w-4xl mx-auto">
