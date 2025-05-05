@@ -39,7 +39,6 @@ export const generateStoryWithGemini = async (subject: string, apiKey: string,pr
   }
 };
 
-
 export const generateImagePrompt = async (storyContent: string, apiKey: string): Promise<string> => {
   try {
     const prompt = `Based on this story content: "${storyContent.slice(0, 200)}", create a detailed prompt for generating a colorful Arabic children's story illustration that captures the main scene.`;
@@ -102,13 +101,13 @@ export const generateImageWithGemini = async (prompt: string, apiKey: string): P
 };
 
 
-export const generateColoringImage = async (hero: string, apiKey?: string): Promise<string> => {
+export const generateColoringImage = async (topic: string, apiKey?: string): Promise<string> => {
   try {
     if (!apiKey) {
       throw new Error("No API key provided");
     }
 
-    const prompt = `image for coloring for kids about : "${hero}".`;
+    const prompt = `Simple black and white line drawing for kids to color about: "${topic}". Make it suitable for children's coloring pages with clear outlines and simple shapes.`;
 
     const genAI = new GoogleGenAI({ apiKey });
 
@@ -311,7 +310,7 @@ export const discussWithGemini = async (
     } else if (userMessage.includes("تعلم") || userMessage.includes("دروس")) {
       response = "التعلم من خلال القصص هو طريقة ممتعة! كل قصة لدينا تحتوي على دروس قيمة حول الشجاعة، الصداقة، التعاون، والمزيد. ما المهارة التي ترغب في تطويرها؟";
     } else if (userMessage.includes("مرحبا") || userMessage.includes("أهلا")) {
-      response = "مرحباً بك! يسعدني التحدث معك حول القصص والتعلم. هل هناك موضوع معين تود مناقشته أو قصة تريد معرفة المزيد عنها؟";
+      response = "مرحباً بك! يسعدني التحدث معك حول القصص والتعلم. هل هناك موضوع معين تود مناقشته أو قصة تريد معرفة ا�� أكثر عنها؟";
     } else {
       response = "شكراً لسؤالك! يمكنني مساعدتك في فهم القصص ومناقشة الدروس المستفادة منها. هل تريد أن أخبرك بالمزيد عن أنشطتنا التعليمية المتنوعة مثل الألعاب والاختبارات والرسم؟";
     }

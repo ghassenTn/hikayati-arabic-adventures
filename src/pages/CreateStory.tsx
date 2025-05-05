@@ -109,8 +109,6 @@ ${includeMoral ? "تتضمن قصة درساً أخلاقياً مهماً." : "
         subject,
         hero,
         content,
-        // genre,
-        tone,
         length,
         includeMoral,
         culturalSetting,

@@ -1,8 +1,8 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useContext } from "react";
 import { GeminiContext } from "@/App";
-import { Brush, Download, Eraser, RefreshCw, Square, Palette } from "lucide-react";
+import { Brush, Download, Eraser, RefreshCw, Square, Palette, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { generateColoringImage } from "@/lib/gemini";
 import { toast } from "@/components/ui/use-toast";
+import { getAllStories } from "@/lib/db";
 import html2canvas from "html2canvas";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -29,9 +30,37 @@ const Coloring = () => {
   const [currentTool, setCurrentTool] = useState<"brush" | "eraser" | "fill">("brush");
   const [coloringImage, setColoringImage] = useState<string | null>(null);
   const [topic, setTopic] = useState("");
+  const [activeTab, setActiveTab] = useState<"generate" | "stories">("generate");
+  const [stories, setStories] = useState<any[]>([]);
+  const [loadingStories, setLoadingStories] = useState(false);
+  
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  
+  // Load stories when component mounts
+  useEffect(() => {
+    const loadStories = async () => {
+      setLoadingStories(true);
+      try {
+        const allStories = await getAllStories();
+        // Filter stories that have images
+        const storiesWithImages = allStories.filter(story => story.image);
+        setStories(storiesWithImages);
+      } catch (error) {
+        console.error("Error loading stories:", error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء تحميل القصص",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingStories(false);
+      }
+    };
+    
+    loadStories();
+  }, []);
   
   const initializeCanvas = () => {
     const canvas = canvasRef.current;
@@ -192,6 +221,34 @@ const Coloring = () => {
     }
   };
   
+  const selectStoryImage = (imageUrl: string) => {
+    setColoringImage(imageUrl);
+    
+    // Load the image onto the canvas
+    const img = new Image();
+    img.src = imageUrl;
+    img.onload = () => {
+      if (contextRef.current && canvasRef.current) {
+        // Clear canvas first
+        contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        
+        // Draw the new image
+        contextRef.current.drawImage(
+          img, 
+          0, 
+          0, 
+          canvasRef.current.width / 2, 
+          canvasRef.current.height / 2
+        );
+      }
+    };
+    
+    toast({
+      title: "تم اختيار الصورة",
+      description: "يمكنك الآن البدء في التلوين",
+    });
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -287,23 +344,59 @@ const Coloring = () => {
                     />
                   </div>
                   
-                  {/* Generate New Image */}
+                  {/* Image Source Tabs */}
                   <div className="space-y-2">
-                    <Label htmlFor="topic">موضوع الصورة</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="topic"
-                        placeholder="أدخل موضوع الصورة"
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
-                      />
-                      <Button
-                        onClick={generateNewImage}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "جاري التحميل..." : "إنشاء"}
-                      </Button>
-                    </div>
+                    <Label>مصدر الصورة</Label>
+                    <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as "generate" | "stories")}>
+                      <TabsList className="w-full">
+                        <TabsTrigger value="generate" className="w-1/2">صورة جديدة</TabsTrigger>
+                        <TabsTrigger value="stories" className="w-1/2">من القصص</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="generate" className="space-y-4 mt-2">
+                        <div className="flex gap-2">
+                          <Input
+                            id="topic"
+                            placeholder="أدخل موضوع الصورة"
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                          />
+                          <Button
+                            onClick={generateNewImage}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? "جاري التحميل..." : "إنشاء"}
+                          </Button>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="stories" className="space-y-4 mt-2">
+                        <div className="max-h-40 overflow-y-auto">
+                          {loadingStories ? (
+                            <div className="flex justify-center py-4">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                            </div>
+                          ) : stories.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {stories.map((story) => (
+                                <Button 
+                                  key={story.id}
+                                  variant="outline"
+                                  className="text-xs h-auto py-1 truncate"
+                                  onClick={() => selectStoryImage(story.image)}
+                                >
+                                  {story.title.length > 15 
+                                    ? `${story.title.substring(0, 15)}...` 
+                                    : story.title}
+                                </Button>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-center text-muted-foreground">لا توجد قصص بها صور</p>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </div>
                   
                   {/* Download Button */}
@@ -335,13 +428,61 @@ const Coloring = () => {
                       <div className="text-center p-6">
                         <Palette className="mx-auto mb-4 text-gray-400" size={48} />
                         <p className="text-lg font-medium mb-2">لا توجد صورة للتلوين</p>
-                        <p className="text-sm text-gray-500 mb-4">أدخل موضوعًا وانقر على زر "إنشاء" لبدء التلوين</p>
+                        <p className="text-sm text-gray-500 mb-4">
+                          {activeTab === "generate" 
+                            ? "أدخل موضوعًا وانقر على زر \"إنشاء\" لبدء التلوين" 
+                            : "اختر صورة من القصص لبدء التلوين"}
+                        </p>
                       </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
+          </div>
+          
+          {/* Stories Images Gallery */}
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  معرض صور القصص
+                </CardTitle>
+                <CardDescription>اختر من صور القصص الموجودة لتلوينها</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingStories ? (
+                  <div className="flex justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  </div>
+                ) : stories.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {stories.map((story) => (
+                      <div 
+                        key={story.id}
+                        className="aspect-square relative rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => selectStoryImage(story.image)}
+                      >
+                        <img 
+                          src={story.image} 
+                          alt={story.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2">
+                          <p className="text-white text-xs truncate">{story.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-lg">لا توجد قصص بها صور</p>
+                    <p className="text-muted-foreground mt-2">يمكنك إنشاء قصص جديدة مع صور من صفحة القصص</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
