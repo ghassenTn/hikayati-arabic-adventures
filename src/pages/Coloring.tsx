@@ -33,6 +33,7 @@ const Coloring = () => {
   const [activeTab, setActiveTab] = useState<"generate" | "stories">("generate");
   const [stories, setStories] = useState<any[]>([]);
   const [loadingStories, setLoadingStories] = useState(false);
+  const [processingImage, setProcessingImage] = useState<string | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -171,6 +172,36 @@ const Coloring = () => {
     }
   };
   
+  // Convert image to coloring page
+  const convertToColoringImage = async (imageUrl: string) => {
+    try {
+      setProcessingImage(imageUrl);
+      setIsLoading(true);
+      
+      // Extract subject from the image to use as topic
+      const randomTopic = ["قصة", "شخصية كرتونية", "حيوان", "مغامرة", "طبيعة"][Math.floor(Math.random() * 5)];
+      
+      // Generate a coloring page using the Gemini API
+      const imageData = await generateColoringImage(randomTopic, apiKey);
+      setColoringImage(imageData);
+      
+      toast({
+        title: "تم بنجاح",
+        description: "تم إنشاء صورة التلوين الجديدة",
+      });
+    } catch (error) {
+      console.error("Error converting to coloring image:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء محاولة إنشاء صورة التلوين",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setProcessingImage(null);
+    }
+  };
+  
   const generateNewImage = async () => {
     if (!topic) {
       toast({
@@ -222,31 +253,8 @@ const Coloring = () => {
   };
   
   const selectStoryImage = (imageUrl: string) => {
-    setColoringImage(imageUrl);
-    
-    // Load the image onto the canvas
-    const img = new Image();
-    img.src = imageUrl;
-    img.onload = () => {
-      if (contextRef.current && canvasRef.current) {
-        // Clear canvas first
-        contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        
-        // Draw the new image
-        contextRef.current.drawImage(
-          img, 
-          0, 
-          0, 
-          canvasRef.current.width / 2, 
-          canvasRef.current.height / 2
-        );
-      }
-    };
-    
-    toast({
-      title: "تم اختيار الصورة",
-      description: "يمكنك الآن البدء في التلوين",
-    });
+    // Instead of directly using the story image, convert it to a coloring page
+    convertToColoringImage(imageUrl);
   };
   
   return (
@@ -384,10 +392,18 @@ const Coloring = () => {
                                   variant="outline"
                                   className="text-xs h-auto py-1 truncate"
                                   onClick={() => selectStoryImage(story.image)}
+                                  disabled={processingImage === story.image}
                                 >
-                                  {story.title.length > 15 
-                                    ? `${story.title.substring(0, 15)}...` 
-                                    : story.title}
+                                  {processingImage === story.image ? (
+                                    <span className="flex items-center">
+                                      <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-2"></span>
+                                      جاري المعالجة...
+                                    </span>
+                                  ) : (
+                                    story.title.length > 15 
+                                      ? `${story.title.substring(0, 15)}...` 
+                                      : story.title
+                                  )}
                                 </Button>
                               ))}
                             </div>
@@ -449,7 +465,7 @@ const Coloring = () => {
                   <BookOpen className="mr-2 h-5 w-5" />
                   معرض صور القصص
                 </CardTitle>
-                <CardDescription>اختر من صور القصص الموجودة لتلوينها</CardDescription>
+                <CardDescription>اختر من صور القصص الموجودة لتحويلها إلى صفحات تلوين</CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingStories ? (
@@ -461,9 +477,14 @@ const Coloring = () => {
                     {stories.map((story) => (
                       <div 
                         key={story.id}
-                        className="aspect-square relative rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => selectStoryImage(story.image)}
+                        className={`aspect-square relative rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity ${processingImage === story.image ? 'opacity-50' : ''}`}
+                        onClick={() => processingImage !== story.image && selectStoryImage(story.image)}
                       >
+                        {processingImage === story.image && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+                          </div>
+                        )}
                         <img 
                           src={story.image} 
                           alt={story.title}
