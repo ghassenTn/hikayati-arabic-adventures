@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 
 export type Story = {
@@ -10,6 +11,10 @@ export type Story = {
   isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
+  length?: number;
+  includeMoral?: boolean;
+  culturalSetting?: string;
+  ageGroup?: string;
 };
 
 const DB_NAME = "hikayati_stories";

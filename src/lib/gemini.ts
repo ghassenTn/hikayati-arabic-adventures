@@ -8,6 +8,19 @@ interface QuizQuestion {
   correctAnswer: string;
 }
 
+interface GameQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+}
+
+interface GameData {
+  type: string;
+  questions: GameQuestion[];
+  instructions: string;
+  title: string;
+}
+
 export const generateStoryWithGemini = async (subject: string, apiKey: string,prompt: string): Promise<string> => {
   try {
     if (!apiKey) {
@@ -259,9 +272,57 @@ export const generateQuizQuestions = async (storyContent: string, apiKey?: strin
   }
 };
 
+export const generateEducationalGame = async (storyContent: string, apiKey: string): Promise<GameData> => {
+  try {
+    if (!apiKey) {
+      throw new Error("No API key provided");
+    }
+
+    const prompt = `
+قم بإنشاء لعبة تعليمية بناءً على القصة التالية:
+"${storyContent.slice(0, 300)}..."
+
+أريد أن تقوم بإنشاء 5 أسئلة اختيار من متعدد تتعلق بالقصة مع 4 خيارات لكل سؤال.
+
+أعد النتائج بتنسيق JSON فقط (بدون أي نص إضافي) كالتالي:
+{
+  "type": "quiz",
+  "title": "عنوان اللعبة التعليمية",
+  "instructions": "تعليمات بسيطة للعبة",
+  "questions": [
+    {
+      "question": "نص السؤال",
+      "options": ["الخيار الأول", "الخيار الثاني", "الخيار الثالث", "الخيار الرابع"],
+      "correctAnswer": "الإجابة الصحيحة (يجب أن تكون واحدة من الخيارات)"
+    },
+    ...
+  ]
+}
+`;
+
+    const genAI = new GoogleGenAI({ apiKey });
+    const response = await genAI.models.generateContent({ model: "gemini-2.0-flash", contents: prompt });
+
+    const text = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!text) throw new Error("Failed to generate game content");
+
+    // Extract the JSON object from the response
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("Invalid response format");
+
+    return JSON.parse(match[0]);
+  } catch (error) {
+    console.error("Error generating educational game:", error);
+    toast({
+      title: "خطأ ف�� إنشاء اللعبة التعليمية",
+      description: "حدث خطأ أثناء محاولة إنشاء اللعبة. يرجى المحاولة مرة أخرى.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
 
 // Chat apis 
-
 export const discussWithGemini = async (
   userMessage: string,
   storiesContext: string,
