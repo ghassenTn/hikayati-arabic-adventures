@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -7,13 +8,14 @@ import {
   PlusCircle,
   BarChart,
   MessageCircle,
-  Palette, // Added Palette icon for coloring
-  Menu, // Icon for hamburger menu
-  X, // Icon for closing mobile menu
-  UserCircle, // Placeholder for User Profile/Login
+  Palette,
+  Menu,
+  X,
+  UserCircle,
+  Sparkles, // Added Sparkles icon for activities
 } from "lucide-react";
 import { ThemeToggle } from "@/components/themes/theme-toggle";
-import { Button } from "@/components/ui/button"; // Using Button component for consistency
+import { Button } from "@/components/ui/button";
 import UserProfileButton from "../auth/UserProfileButton";
 
 const Navbar = () => {
@@ -26,7 +28,8 @@ const Navbar = () => {
     { path: "/", icon: Home, label: "الرئيسية" },
     { path: "/stories", icon: Book, label: "القصص" },
     { path: "/create", icon: PlusCircle, label: "قصة جديدة" },
-    { path: "/coloring", icon: Palette, label: "التلوين" }, // Add coloring link
+    { path: "/coloring", icon: Palette, label: "التلوين" },
+    { path: "/activities", icon: Sparkles, label: "الأنشطة" }, // Add activities link
     { 
       path: "/analytics", 
       icon: BarChart, 
@@ -67,6 +70,7 @@ const Navbar = () => {
 
   // --- Badge Classes ---
   const badgeClasses = "ml-2 px-1.5 py-0.5 rounded text-[0.65rem] font-medium bg-primary/5 text-primary/80 border border-primary/10";
+
   // --- Render Navigation Links (Helper for DRY) ---
   const renderNavLinks = (isMobile: boolean = false) => (
     navItems.map((item) => (

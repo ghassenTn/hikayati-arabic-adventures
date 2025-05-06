@@ -13,7 +13,8 @@ import CreateStory from "./pages/CreateStory";
 import StoryDetail from "./pages/StoryDetail";
 import Analytics from "./pages/Analytics";
 import Chat from "./pages/Chat";
-import Coloring from "./pages/Coloring"; // Import the new Coloring component
+import Coloring from "./pages/Coloring";
+import Activities from "./pages/Activities"; // Import the new Activities component
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -61,7 +62,8 @@ const App = () => {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/stories" element={<StoryList />} />
-                  <Route path="/coloring" element={<Coloring />} /> {/* Add new Coloring route */}
+                  <Route path="/coloring" element={<Coloring />} />
+                  <Route path="/activities" element={<Activities />} /> {/* Add new Activities route */}
                   <Route 
                     path="/create" 
                     element={
