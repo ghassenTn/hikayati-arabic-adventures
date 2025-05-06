@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from "react";
 
 export interface User {
@@ -6,7 +5,6 @@ export interface User {
   name?: string;
   picture?: string;
   provider?: string;
-  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -48,10 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = (userData: User) => {
-    // Add createdAt if it doesn't exist
-    if (!userData.createdAt) {
-      userData.createdAt = new Date().toISOString();
-    }
     setUser(userData);
     localStorage.setItem("hikayati-user", JSON.stringify(userData));
   };

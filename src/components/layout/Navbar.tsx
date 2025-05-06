@@ -20,11 +20,11 @@ import {
   ScrollText,
   GraduationCap,
   Heart,
+  ChevronDown,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/themes/theme-toggle";
 import { Button } from "@/components/ui/button";
 import UserProfileButton from "../auth/UserProfileButton";
-import { useSettings } from "@/contexts/SettingsContext";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -40,54 +40,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-
-// Define the proper type for navigation items that can include a badge
-interface NavItem {
-  path: string;
-  icon: React.ComponentType<any>;
-  label: string;
-  badge?: string;
-}
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 const Navbar = () => {
   const location = useLocation();
-  const { showChat, showStats } = useSettings();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedAgeRange, setSelectedAgeRange] = useState("all");
 
   // --- Navigation Items ---
-  const getNavItems = () => {
-    const baseItems: NavItem[] = [
-      { path: "/", icon: Home, label: "الرئيسية" },
-      { path: "/stories", icon: Book, label: "القصص" },
-      { path: "/create", icon: PlusCircle, label: "قصة جديدة" },
-      { path: "/coloring", icon: Palette, label: "التلوين" },
-    ];
-    
-    // Only add stats/analytics if setting is enabled
-    if (showStats) {
-      baseItems.push({
-        path: "/analytics", 
-        icon: BarChart, 
-        label: "التحليلات",
-      });
-    }
-    
-    // Only add chat if setting is enabled
-    if (showChat) {
-      baseItems.push({ 
-        path: "/chat", 
-        icon: MessageCircle, 
-        label: "المساعد", 
-        badge: "Beta" 
-      });
-    }
-    
-    return baseItems;
-  };
+  const navItems = [
+    { path: "/", icon: Home, label: "الرئيسية" },
+    { path: "/stories", icon: Book, label: "القصص" },
+    { path: "/create", icon: PlusCircle, label: "قصة جديدة" },
+    { path: "/coloring", icon: Palette, label: "التلوين" },
+    { 
+      path: "/analytics", 
+      icon: BarChart, 
+      label: "التحليلات",
+    },
+    { path: "/chat", icon: MessageCircle, label: "المساعد", badge: "Beta" },
+  ];
 
   // --- Activity Domains ---
   const activityDomains = [
@@ -133,6 +115,12 @@ const Navbar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  // --- Handle Domain Selection ---
+  const handleDomainSelect = (domain: string, ageRange: string) => {
+    console.log(`Selected domain: ${domain}, Age range: ${ageRange}`);
+    // Navigate to the activities page with the selected domain and age range
+  };
+
   // --- Common Link Classes ---
   const commonLinkClasses = "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   const activeLinkClasses = "bg-primary text-primary-foreground";
@@ -143,7 +131,7 @@ const Navbar = () => {
   
   // --- Render Navigation Links (Helper for DRY) ---
   const renderNavLinks = (isMobile: boolean = false) => (
-    getNavItems().map((item) => (
+    navItems.map((item) => (
       <Link
         key={item.path}
         to={item.path}
@@ -314,9 +302,13 @@ const Navbar = () => {
 
         {/* --- Right Aligned Items (Theme Toggle, Auth) --- */}
         <div className="flex items-center gap-2">
-          {/* User Auth Placeholder - Desktop */}
+           {/* User Auth Placeholder - Desktop */}
           <div className="hidden md:flex">
-            <UserProfileButton />
+            <Button variant="ghost" size="icon" aria-label="User Profile" asChild>
+              <Link to="/profile">
+                <UserCircle size={20} />
+              </Link>
+            </Button>
           </div>
           
           <ThemeToggle />
@@ -355,10 +347,17 @@ const Navbar = () => {
           {/* Divider */}
           <div className="border-t border-border pt-4 mt-4 mx-2"></div>
 
-          {/* User Profile Button - Mobile */}
-          <div className="px-2">
-            <UserProfileButton />
-          </div>
+          {/* User Auth Placeholder - Mobile */}
+          <Link
+            to="/profile"
+            className={cn(commonLinkClasses, inactiveLinkClasses, "w-full justify-start text-base")}
+            onClick={toggleMobileMenu}
+          >
+            <UserCircle size={20} aria-hidden="true" />
+            <span></span> 
+            <span></span> 
+          </Link>
+          <UserProfileButton/>
         </nav>
       </div>
     </header>

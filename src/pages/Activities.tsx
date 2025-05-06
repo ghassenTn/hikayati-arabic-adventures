@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet";
 import FreeActivities from "@/components/activities/FreeActivities";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
