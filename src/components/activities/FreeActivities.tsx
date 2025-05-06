@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Book, Infinity, School, BookOpen, HelpCircle, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,7 +48,11 @@ const domains = [
 ];
 
 // Function to generate a new question based on the domain using AI
-const generateAIQuestion = async (domainId: string, apiKey: string): Promise<Question> => {
+const generateAIQuestion = async (
+  domainId: string,
+  apiKey: string,
+  previousQuestions: string[]
+): Promise<Question> => {
   try {
     // Prepare content based on domain
     const domainContent = {
@@ -61,6 +65,7 @@ const generateAIQuestion = async (domainId: string, apiKey: string): Promise<Que
     // Generate question using Gemini API
     const prompt = `قم بإنشاء سؤال اختيار من متعدد تعليمي للأطفال عن ${domainContent[domainId as keyof typeof domainContent]}. 
     السؤال يجب أن يكون باللغة العربية مع 4 خيارات.
+    تأكد أن السؤال فريد وليس مكررًا من الأسئلة السابقة: ${previousQuestions.join(' | ')}
     قم بتنسيق الإجابة بشكل JSON فقط بالشكل التالي:
     {
       "question": "نص السؤال؟",
@@ -107,6 +112,14 @@ const FreeActivities = () => {
   const [customQuestion, setCustomQuestion] = useState<string>("");
   const [showCustomQuestion, setShowCustomQuestion] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  
+  // Store previous questions to avoid repetition
+  const previousQuestions = useRef<{[key: string]: string[]}>({
+    language: [],
+    science: [],
+    math: [],
+    social: []
+  });
 
   // Generate a question when the tab changes or component first loads
   useEffect(() => {
@@ -116,7 +129,24 @@ const FreeActivities = () => {
   const generateNewQuestion = async () => {
     setLoading(true);
     try {
-      const newQuestion = await generateAIQuestion(activeTab, apiKey);
+      // Pass the previous questions for this domain to avoid repetition
+      const newQuestion = await generateAIQuestion(
+        activeTab, 
+        apiKey,
+        previousQuestions.current[activeTab] || []
+      );
+      
+      // Store this question to avoid repeating it
+      if (newQuestion.question !== `سؤال تلقائي حول ${activeTab}؟`) {
+        previousQuestions.current = {
+          ...previousQuestions.current,
+          [activeTab]: [
+            ...(previousQuestions.current[activeTab] || []).slice(-5),
+            newQuestion.question
+          ]
+        };
+      }
+      
       setCurrentQuestion(newQuestion);
       setSelectedAnswer("");
       setShowResult(false);
@@ -233,7 +263,7 @@ const FreeActivities = () => {
                         </div>
 
                         <RadioGroup 
-                          defaultValue={selectedAnswer} 
+                          value={selectedAnswer} 
                           onValueChange={setSelectedAnswer}
                           className="space-y-3 my-4"
                           disabled={showResult}
