@@ -35,9 +35,12 @@ const Profile = () => {
   // Format the date using a safe method since createdAt might not exist
   const formatJoinDate = () => {
     try {
-      // If user has createdAt property, use it, otherwise use current date
-      const joinDate = user && 'createdAt' in user ? user.createdAt : new Date().toISOString();
-      return new Date(joinDate || Date.now()).toLocaleDateString('ar-SA');
+      // Check if user and createdAt exist and are valid
+      if (user && 'createdAt' in user && typeof user.createdAt === 'string') {
+        return new Date(user.createdAt).toLocaleDateString('ar-SA');
+      }
+      // Fallback to current date
+      return new Date().toLocaleDateString('ar-SA');
     } catch (error) {
       console.error("Error formatting join date:", error);
       return new Date().toLocaleDateString('ar-SA');
