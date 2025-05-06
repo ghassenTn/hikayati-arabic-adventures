@@ -32,6 +32,18 @@ const Profile = () => {
     });
   };
 
+  // Format the date using a safe method since createdAt might not exist
+  const formatJoinDate = () => {
+    try {
+      // If user has createdAt property, use it, otherwise use current date
+      const joinDate = user && 'createdAt' in user ? user.createdAt : new Date().toISOString();
+      return new Date(joinDate || Date.now()).toLocaleDateString('ar-SA');
+    } catch (error) {
+      console.error("Error formatting join date:", error);
+      return new Date().toLocaleDateString('ar-SA');
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -64,7 +76,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <h3 className="font-medium text-sm text-muted-foreground">تاريخ الانضمام</h3>
-                      <p className="mt-1">{new Date(user.createdAt || Date.now()).toLocaleDateString('ar-SA')}</p>
+                      <p className="mt-1">{formatJoinDate()}</p>
                     </div>
                   </CardContent>
                 </Card>

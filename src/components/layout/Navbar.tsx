@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,14 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
+// Define the proper type for navigation items that can include a badge
+interface NavItem {
+  path: string;
+  icon: React.ComponentType<any>;
+  label: string;
+  badge?: string;
+}
+
 const Navbar = () => {
   const location = useLocation();
   const { showChat, showStats } = useSettings();
@@ -51,7 +60,7 @@ const Navbar = () => {
 
   // --- Navigation Items ---
   const getNavItems = () => {
-    const baseItems = [
+    const baseItems: NavItem[] = [
       { path: "/", icon: Home, label: "الرئيسية" },
       { path: "/stories", icon: Book, label: "القصص" },
       { path: "/create", icon: PlusCircle, label: "قصة جديدة" },
