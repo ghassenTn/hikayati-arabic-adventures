@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Brain, Book, Infinity, School, BookOpen, HelpCircle, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { GeminiContext } from "@/App";
+import { generateQuizQuestions } from "@/lib/gemini";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/use-toast";
 
 // Question type definition
 type Question = {
@@ -43,207 +47,56 @@ const domains = [
   }
 ];
 
-// Sample questions database by domain
-const questionsDatabase: Record<string, Question[]> = {
-  language: [
+// Function to generate a new question based on the domain using AI
+const generateAIQuestion = async (domainId: string, apiKey: string): Promise<Question> => {
+  try {
+    // Prepare content based on domain
+    const domainContent = {
+      language: "اللغة العربية وقواعدها والنحو والصرف والبلاغة",
+      science: "العلوم والفيزياء والكيمياء والأحياء والفلك",
+      math: "الرياضيات والحساب والجبر والهندسة",
+      social: "الاجتماعيات والتاريخ والجغرافيا"
+    };
+    
+    // Generate question using Gemini API
+    const prompt = `قم بإنشاء سؤال اختيار من متعدد تعليمي للأطفال عن ${domainContent[domainId as keyof typeof domainContent]}. 
+    السؤال يجب أن يكون باللغة العربية مع 4 خيارات.
+    قم بتنسيق الإجابة بشكل JSON فقط بالشكل التالي:
     {
-      id: 1,
-      question: "ما هو جمع كلمة 'كتاب'؟",
-      options: ["كتب", "كتابات", "كتبان", "كاتبون"],
-      correctAnswer: "كتب"
-    },
-    {
-      id: 2,
-      question: "أي من الكلمات التالية تحتوي على همزة قطع؟",
-      options: ["استماع", "أحمد", "انطلاق", "استغفار"],
-      correctAnswer: "أحمد"
-    },
-    {
-      id: 3,
-      question: "ما هو ضد كلمة 'سعادة'؟",
-      options: ["حزن", "فرح", "سرور", "بهجة"],
-      correctAnswer: "حزن"
-    },
-    {
-      id: 4,
-      question: "ما هو المثنى من كلمة 'معلم'؟",
-      options: ["معلمان", "معلمين", "معلمون", "معالم"],
-      correctAnswer: "معلمان"
-    }
-  ],
-  science: [
-    {
-      id: 1,
-      question: "ما هو أكبر كوكب في المجموعة الشمسية؟",
-      options: ["المريخ", "المشتري", "زحل", "الأرض"],
-      correctAnswer: "المشتري"
-    },
-    {
-      id: 2,
-      question: "مم تتكون المادة؟",
-      options: ["ذرات", "خلايا", "جزيئات فقط", "بروتينات"],
-      correctAnswer: "ذرات"
-    },
-    {
-      id: 3,
-      question: "أي من الحيوانات التالية من الثدييات؟",
-      options: ["السلحفاة", "التمساح", "الدولفين", "السمكة"],
-      correctAnswer: "الدولفين"
-    },
-    {
-      id: 4,
-      question: "ما هي وظيفة القلب في جسم الإنسان؟",
-      options: ["ضخ الدم", "هضم الطعام", "تنقية الهواء", "إنتاج الأنزيمات"],
-      correctAnswer: "ضخ الدم"
-    }
-  ],
-  math: [
-    {
-      id: 1,
-      question: "ما هو ناتج 7 × 8 ؟",
-      options: ["54", "56", "49", "64"],
-      correctAnswer: "56"
-    },
-    {
-      id: 2,
-      question: "كم يساوي محيط المربع الذي طول ضلعه 5 سم؟",
-      options: ["10 سم", "15 سم", "20 سم", "25 سم"],
-      correctAnswer: "20 سم"
-    },
-    {
-      id: 3,
-      question: "ما هو العدد الذي إذا أضفنا إليه 15 يصبح 42؟",
-      options: ["27", "25", "28", "30"],
-      correctAnswer: "27"
-    },
-    {
-      id: 4,
-      question: "ما هو الكسر المكافئ للكسر 2/4 ؟",
-      options: ["1/2", "2/6", "3/6", "4/8"],
-      correctAnswer: "1/2"
-    }
-  ],
-  social: [
-    {
-      id: 1,
-      question: "ما هي عاصمة المملكة العربية السعودية؟",
-      options: ["جدة", "الرياض", "مكة", "المدينة"],
-      correctAnswer: "الرياض"
-    },
-    {
-      id: 2,
-      question: "من هو الخليفة الراشدي الأول في الإسلام؟",
-      options: ["عمر بن الخطاب", "عثمان بن عفان", "علي بن أبي طالب", "أبو بكر الصديق"],
-      correctAnswer: "أبو بكر الصديق"
-    },
-    {
-      id: 3,
-      question: "أي من هذه الدول ليست من دول مجلس التعاون الخليجي؟",
-      options: ["الكويت", "البحرين", "الأردن", "عمان"],
-      correctAnswer: "الأردن"
-    },
-    {
-      id: 4,
-      question: "ما هو النهر الذي يمر عبر مصر؟",
-      options: ["دجلة", "النيل", "الفرات", "الأمازون"],
-      correctAnswer: "النيل"
-    }
-  ]
-};
+      "question": "نص السؤال؟",
+      "options": ["الخيار الأول", "الخيار الثاني", "الخيار الثالث", "الخيار الرابع"],
+      "correctAnswer": "الإجابة الصحيحة (يجب أن تكون واحدة من الخيارات)"
+    }`;
 
-// Function to generate a new question based on the domain
-const generateQuestion = (domainId: string): Question => {
-  const domainQuestions = questionsDatabase[domainId];
-  
-  // Base template questions if we run out of pre-defined questions
-  const baseTemplates: Record<string, Question[]> = {
-    language: [
-      {
-        id: 100,
-        question: "أي من الكلمات التالية تحتوي على حرف الضاد؟",
-        options: ["ضوء", "سماء", "قلب", "بحر"],
-        correctAnswer: "ضوء"
-      },
-      {
-        id: 101,
-        question: "ما هو الفعل المضارع من 'كتب'؟",
-        options: ["يكتب", "كاتب", "مكتوب", "كتابة"],
-        correctAnswer: "يكتب"
-      }
-    ],
-    science: [
-      {
-        id: 100,
-        question: "ما هي الغازات الأساسية في الهواء؟",
-        options: ["أكسجين ونيتروجين", "هيدروجين وهيليوم", "نيتروجين وهيليوم", "أكسجين وكربون"],
-        correctAnswer: "أكسجين ونيتروجين"
-      },
-      {
-        id: 101,
-        question: "ما هي حالات المادة الثلاث الأساسية؟",
-        options: ["صلبة وسائلة وغازية", "صلبة وناعمة ولينة", "سائلة وغازية وبلازما", "ناعمة وسائلة وغازية"],
-        correctAnswer: "صلبة وسائلة وغازية"
-      }
-    ],
-    math: [
-      {
-        id: 100,
-        question: "كم يساوي ناتج 144 ÷ 12؟",
-        options: ["12", "14", "10", "16"],
-        correctAnswer: "12"
-      },
-      {
-        id: 101,
-        question: "ما هو الشكل الذي له أربعة أضلاع متساوية وأربع زوايا قائمة؟",
-        options: ["المستطيل", "المربع", "المثلث", "الدائرة"],
-        correctAnswer: "المربع"
-      }
-    ],
-    social: [
-      {
-        id: 100,
-        question: "ما هي أطول سلسلة جبال في العالم؟",
-        options: ["جبال الهيمالايا", "جبال الأنديز", "جبال الألب", "جبال روكي"],
-        correctAnswer: "جبال الأنديز"
-      },
-      {
-        id: 101,
-        question: "في أي قارة تقع مصر؟",
-        options: ["آسيا", "أفريقيا", "أوروبا", "أمريكا الشمالية"],
-        correctAnswer: "أفريقيا"
-      }
-    ]
-  };
-  
-  // Generate a random index
-  const randomIndex = Math.floor(Math.random() * (domainQuestions.length + baseTemplates[domainId].length));
-  
-  // Use a base template if we exceed our main question bank
-  if (randomIndex >= domainQuestions.length) {
-    const templateIndex = randomIndex - domainQuestions.length;
-    const templateQuestion = {...baseTemplates[domainId][templateIndex % baseTemplates[domainId].length]};
+    const response = await generateQuizQuestions(prompt, apiKey);
     
-    // Modify the template slightly to create variety
-    const suffixes = [" في رأيك؟", " بشكل صحيح؟", " حسب ما تعلمت؟", "؟"];
-    templateQuestion.id = Date.now(); // ensure unique ID
-    templateQuestion.question = templateQuestion.question.replace("؟", suffixes[Math.floor(Math.random() * suffixes.length)]);
+    // Take the first question from the response
+    const aiQuestion = response && response.length > 0 ? response[0] : null;
     
-    // Shuffle options
-    templateQuestion.options.sort(() => Math.random() - 0.5);
-    
-    return templateQuestion;
+    if (!aiQuestion) {
+      throw new Error("Failed to generate question");
+    }
+
+    return {
+      id: Date.now(),
+      question: aiQuestion.question,
+      options: aiQuestion.options,
+      correctAnswer: aiQuestion.correctAnswer
+    };
+  } catch (error) {
+    console.error("Error generating AI question:", error);
+    // Fallback to a simple question if AI fails
+    return {
+      id: Date.now(),
+      question: `سؤال تلقائي حول ${domainId}؟`,
+      options: ["الخيار الأول", "الخيار الثاني", "الخيار الثالث", "الخيار الرابع"],
+      correctAnswer: "الخيار الأول"
+    };
   }
-  
-  // Return a copy of the question to avoid modifying the original
-  const selectedQuestion = {...domainQuestions[randomIndex]};
-  
-  // Shuffle options order for variety
-  selectedQuestion.options.sort(() => Math.random() - 0.5);
-  
-  return selectedQuestion;
 };
 
 const FreeActivities = () => {
+  const { apiKey } = useContext(GeminiContext);
   const [activeTab, setActiveTab] = useState("language");
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
@@ -253,17 +106,30 @@ const FreeActivities = () => {
   const [questionsAnswered, setQuestionsAnswered] = useState<number>(0);
   const [customQuestion, setCustomQuestion] = useState<string>("");
   const [showCustomQuestion, setShowCustomQuestion] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Generate a question when the tab changes or component first loads
   useEffect(() => {
     generateNewQuestion();
-  }, [activeTab]);
+  }, [activeTab, apiKey]);
 
-  const generateNewQuestion = () => {
-    const newQuestion = generateQuestion(activeTab);
-    setCurrentQuestion(newQuestion);
-    setSelectedAnswer("");
-    setShowResult(false);
+  const generateNewQuestion = async () => {
+    setLoading(true);
+    try {
+      const newQuestion = await generateAIQuestion(activeTab, apiKey);
+      setCurrentQuestion(newQuestion);
+      setSelectedAnswer("");
+      setShowResult(false);
+    } catch (error) {
+      console.error("Failed to generate question:", error);
+      toast({
+        title: "خطأ في إنشاء السؤال",
+        description: "لم نتمكن من إنشاء سؤال جديد. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAnswerSubmit = () => {
@@ -282,6 +148,16 @@ const FreeActivities = () => {
 
   const handleNextQuestion = () => {
     generateNewQuestion();
+  };
+
+  const handleCustomQuestionSubmit = () => {
+    if (customQuestion.trim()) {
+      toast({
+        title: "تم استلام سؤالك",
+        description: "شكرًا لمساهمتك! سيتم مراجعة سؤالك وإضافته قريبًا.",
+      });
+      setCustomQuestion("");
+    }
   };
 
   return (
@@ -323,7 +199,26 @@ const FreeActivities = () => {
                 <CardContent>
                   <div className="space-y-6">
                     {/* Question Card */}
-                    {currentQuestion && (
+                    {loading ? (
+                      <Card className="p-6 border-primary/20 bg-primary/5">
+                        <div className="flex justify-between items-start mb-4">
+                          <Skeleton className="h-6 w-3/4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            disabled
+                          >
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          </Button>
+                        </div>
+                        <div className="space-y-3 my-4">
+                          {[1, 2, 3, 4].map((item) => (
+                            <Skeleton key={item} className="h-12 w-full" />
+                          ))}
+                        </div>
+                        <Skeleton className="h-10 w-full mt-4" />
+                      </Card>
+                    ) : currentQuestion ? (
                       <Card className="p-6 border-primary/20 bg-primary/5">
                         <div className="flex justify-between items-start mb-4">
                           <div className="text-lg font-medium">{currentQuestion.question}</div>
@@ -387,7 +282,7 @@ const FreeActivities = () => {
                           </div>
                         )}
                       </Card>
-                    )}
+                    ) : null}
                     
                     {/* Score Card */}
                     <Card className="p-4 bg-background">
@@ -427,13 +322,10 @@ const FreeActivities = () => {
                           value={customQuestion}
                           onChange={(e) => setCustomQuestion(e.target.value)}
                         />
-                        <Button onClick={() => {
-                          if (customQuestion.trim()) {
-                            // Handle custom question - in production, this would send to backend
-                            alert("تم إرسال سؤالك، سيتم إضافته قريباً");
-                            setCustomQuestion("");
-                          }
-                        }} disabled={!customQuestion.trim()}>
+                        <Button 
+                          onClick={handleCustomQuestionSubmit} 
+                          disabled={!customQuestion.trim()}
+                        >
                           إرسال السؤال
                         </Button>
                       </div>
