@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { createContext, useState } from "react";
 import { ThemeProvider } from "@/components/themes/theme-provider";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import Index from "./pages/Index";
 import StoryList from "./pages/StoryList";
 import CreateStory from "./pages/CreateStory";
@@ -17,7 +18,8 @@ import Coloring from "./pages/Coloring";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
-import Activities from "./pages/Activities"; // New import for Activities page
+import Activities from "./pages/Activities";
+import Profile from "./pages/Profile"; // New import for Profile page
 
 const queryClient = new QueryClient();
 
@@ -53,43 +55,46 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <GeminiContext.Provider value={{ apiKey, setApiKey }}>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/stories" element={<StoryList />} />
-                  <Route path="/coloring" element={<Coloring />} />
-                  <Route path="/activities" element={<Activities />} />
-                  <Route path="/activities/:domain" element={<Activities />} />
-                  <Route 
-                    path="/create" 
-                    element={
-                      <ProtectedRoute>
-                        <CreateStory />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/story/:id" 
-                    element={<StoryDetail />} 
-                  />
-                  <Route 
-                    path="/analytics" 
-                    element={
-                      <ProtectedRoute>
-                        <Analytics />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route path="/chat" element={<Chat />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </GeminiContext.Provider>
+            <SettingsProvider>
+              <GeminiContext.Provider value={{ apiKey, setApiKey }}>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/stories" element={<StoryList />} />
+                    <Route path="/coloring" element={<Coloring />} />
+                    <Route path="/activities" element={<Activities />} />
+                    <Route path="/activities/:domain" element={<Activities />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route 
+                      path="/create" 
+                      element={
+                        <ProtectedRoute>
+                          <CreateStory />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/story/:id" 
+                      element={<StoryDetail />} 
+                    />
+                    <Route 
+                      path="/analytics" 
+                      element={
+                        <ProtectedRoute>
+                          <Analytics />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="/chat" element={<Chat />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </GeminiContext.Provider>
+            </SettingsProvider>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
