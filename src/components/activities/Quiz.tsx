@@ -134,7 +134,7 @@ const Quiz = ({ storyContent, apiKey }: QuizProps) => {
             </div>
             
             <RadioGroup
-              value={selectedAnswers[questionIndex]}
+              defaultValue={selectedAnswers[questionIndex]}
               onValueChange={(value) => handleAnswerSelect(questionIndex, value)}
               className="space-y-2"
             >
@@ -142,15 +142,14 @@ const Quiz = ({ storyContent, apiKey }: QuizProps) => {
                 <div key={optionIndex} className="flex items-center space-x-2 rtl:space-x-reverse">
                   <RadioGroupItem
                     value={option}
-                    id={`question-${questionIndex}-option-${optionIndex}`}
                     disabled={submitted}
                     className="mt-1"
                   />
-                  <div className="flex-grow">
-                    <Label htmlFor={`question-${questionIndex}-option-${optionIndex}`} className="text-base">
-                      {option}
-                    </Label>
-                  </div>
+                  <Label 
+                    className="text-base"
+                  >
+                    {option}
+                  </Label>
                   {submitted && (
                     <div className="ml-2 rtl:mr-2 rtl:ml-0">
                       {option === question.correctAnswer ? (

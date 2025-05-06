@@ -169,8 +169,8 @@ const FreeActivities = () => {
         </p>
         
         <Tabs 
-          value={activeTab} 
-          onValueChange={(value) => setActiveTab(value)}
+          defaultValue={activeTab}
+          onValueChange={setActiveTab}
           className="w-full max-w-4xl mx-auto"
         >
           <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-8">
@@ -180,7 +180,7 @@ const FreeActivities = () => {
                 value={domain.id}
                 className="flex flex-col gap-2 py-4"
               >
-                {domain.icon}
+                <span className="flex justify-center">{domain.icon}</span>
                 <span>{domain.name}</span>
               </TabsTrigger>
             ))}
@@ -191,7 +191,7 @@ const FreeActivities = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    {domain.icon}
+                    <span>{domain.icon}</span>
                     <span>{domain.name}</span>
                   </CardTitle>
                   <CardDescription>{domain.description}</CardDescription>
@@ -233,7 +233,7 @@ const FreeActivities = () => {
                         </div>
 
                         <RadioGroup 
-                          value={selectedAnswer} 
+                          defaultValue={selectedAnswer} 
                           onValueChange={setSelectedAnswer}
                           className="space-y-3 my-4"
                           disabled={showResult}
@@ -245,7 +245,7 @@ const FreeActivities = () => {
                               ${showResult && selectedAnswer === option && option !== currentQuestion.correctAnswer ? 'bg-red-100 border-red-300' : ''}
                               ${!showResult ? 'hover:bg-accent cursor-pointer' : ''}
                             `}>
-                              <RadioGroupItem value={option} id={option} />
+                              <RadioGroupItem value={option} />
                               <label
                                 htmlFor={option}
                                 className="flex-1 text-base cursor-pointer"
