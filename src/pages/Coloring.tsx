@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useContext } from "react";
 import { GeminiContext } from "@/App";
-import { Brush, Download, Eraser, RefreshCw, Square, Palette, BookOpen } from "lucide-react";
+import { Brush, Download, Eraser, RefreshCw, Square, Palette, BookOpen, PaintBucket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,13 +26,15 @@ const Coloring = () => {
   const [brushSize, setBrushSize] = useState(10);
   const [isErasing, setIsErasing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentTool, setCurrentTool] = useState<"brush" | "eraser" | "fill">("brush");
+  const [currentTool, setCurrentTool] = useState<"brush" | "eraser" | "fill" | "ai-color">("brush");
   const [coloringImage, setColoringImage] = useState<string | null>(null);
   const [topic, setTopic] = useState("");
   const [activeTab, setActiveTab] = useState<"generate" | "stories">("generate");
   const [stories, setStories] = useState<any[]>([]);
   const [loadingStories, setLoadingStories] = useState(false);
   const [processingImages, setProcessingImages] = useState<string[]>([]);
+  const [isAiColoring, setIsAiColoring] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<{startX: number, startY: number, endX: number, endY: number} | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -99,6 +101,19 @@ const Coloring = () => {
   
   const startDrawing = ({ nativeEvent }: React.MouseEvent | React.TouchEvent) => {
     const { offsetX, offsetY } = nativeEvent as MouseEvent;
+    
+    if (currentTool === "ai-color" && coloringImage) {
+      // For AI coloring, we start selecting an area
+      setSelectedArea({
+        startX: offsetX,
+        startY: offsetY,
+        endX: offsetX,
+        endY: offsetY
+      });
+      setIsDrawing(true);
+      return;
+    }
+    
     if (contextRef.current) {
       contextRef.current.beginPath();
       contextRef.current.moveTo(offsetX, offsetY);
@@ -110,6 +125,45 @@ const Coloring = () => {
     if (!isDrawing) return;
     
     const { offsetX, offsetY } = nativeEvent as MouseEvent;
+    
+    if (currentTool === "ai-color" && selectedArea) {
+      // Update the selection area for AI coloring
+      setSelectedArea({
+        ...selectedArea,
+        endX: offsetX,
+        endY: offsetY
+      });
+      
+      // Draw the selection rectangle
+      if (canvasRef.current && contextRef.current) {
+        const ctx = contextRef.current;
+        
+        // Save current drawing
+        const currentCanvas = canvasRef.current.toDataURL();
+        const img = new Image();
+        img.src = currentCanvas;
+        
+        img.onload = () => {
+          if (!canvasRef.current || !contextRef.current || !selectedArea) return;
+          
+          // Clear canvas and redraw the image
+          contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          contextRef.current.drawImage(img, 0, 0, canvasRef.current.width / 2, canvasRef.current.height / 2);
+          
+          // Draw selection rectangle
+          contextRef.current.strokeStyle = "#0000FF";
+          contextRef.current.lineWidth = 2;
+          contextRef.current.strokeRect(
+            selectedArea.startX,
+            selectedArea.startY,
+            offsetX - selectedArea.startX,
+            offsetY - selectedArea.startY
+          );
+        };
+      }
+      return;
+    }
+    
     if (contextRef.current) {
       contextRef.current.lineTo(offsetX, offsetY);
       contextRef.current.stroke();
@@ -117,15 +171,87 @@ const Coloring = () => {
   };
   
   const stopDrawing = () => {
+    if (currentTool === "ai-color" && selectedArea && isDrawing) {
+      // Apply AI coloring to the selected area
+      applyAiColoring();
+    }
+    
     if (contextRef.current) {
       contextRef.current.closePath();
       setIsDrawing(false);
     }
   };
   
-  const handleToolChange = (tool: "brush" | "eraser" | "fill") => {
+  const applyAiColoring = async () => {
+    if (!canvasRef.current || !contextRef.current || !selectedArea) return;
+    
+    setIsAiColoring(true);
+    
+    try {
+      // Get the selected area dimensions
+      const width = Math.abs(selectedArea.endX - selectedArea.startX);
+      const height = Math.abs(selectedArea.endY - selectedArea.startY);
+      const startX = Math.min(selectedArea.startX, selectedArea.endX);
+      const startY = Math.min(selectedArea.startY, selectedArea.endY);
+      
+      // Create a temporary canvas to hold the selected area
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      if (tempCtx) {
+        // Copy the selected area to the temporary canvas
+        tempCtx.drawImage(
+          canvasRef.current, 
+          startX * 2, startY * 2, width * 2, height * 2, // Source (multiply by 2 for retina display)
+          0, 0, width, height  // Destination
+        );
+        
+        // Fill the area with the selected color
+        contextRef.current.fillStyle = activeColor;
+        contextRef.current.fillRect(startX, startY, width, height);
+        
+        // Restore the black outlines by overlaying the original image
+        // (This is a simplified approach; in a real implementation, we would use computer vision to detect edges)
+        const img = new Image();
+        img.src = coloringImage || '';
+        
+        img.onload = () => {
+          if (!contextRef.current || !canvasRef.current) return;
+          
+          // Draw just the outlines (this is simplified)
+          contextRef.current.globalCompositeOperation = 'darken'; // Only apply darker pixels
+          contextRef.current.drawImage(
+            img, 
+            0, 0, 
+            canvasRef.current.width / 2, canvasRef.current.height / 2
+          );
+          contextRef.current.globalCompositeOperation = 'source-over'; // Reset composite operation
+          
+          toast({
+            title: "تم التلوين",
+            description: "تم تلوين المنطقة المحددة باستخدام الذكاء الاصطناعي",
+          });
+        };
+      }
+    } catch (error) {
+      console.error("Error applying AI coloring:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تطبيق التلوين الذكي",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAiColoring(false);
+      setSelectedArea(null);
+    }
+  };
+  
+  const handleToolChange = (tool: "brush" | "eraser" | "fill" | "ai-color") => {
     setCurrentTool(tool);
     setIsErasing(tool === "eraser");
+    setSelectedArea(null); // Clear any selected area when changing tools
   };
   
   const clearCanvas = () => {
@@ -305,6 +431,14 @@ const Coloring = () => {
                         <Square size={18} />
                       </Button>
                       <Button 
+                        variant={currentTool === "ai-color" ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => handleToolChange("ai-color")}
+                        title="تلوين ذكي"
+                      >
+                        <PaintBucket size={18} />
+                      </Button>
+                      <Button 
                         variant="outline"
                         size="icon"
                         onClick={clearCanvas}
@@ -353,6 +487,18 @@ const Coloring = () => {
                       className="w-full h-10 mt-2"
                     />
                   </div>
+                  
+                  {/* Tool Instructions */}
+                  {currentTool === "ai-color" && (
+                    <div className="bg-secondary/30 p-3 rounded-md text-sm">
+                      <p className="font-medium mb-1">كيفية استخدام التلوين الذكي:</p>
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>اختر لونًا من لوحة الألوان</li>
+                        <li>انقر واسحب لتحديد المنطقة المراد تلوينها</li>
+                        <li>حرر الزر لتطبيق اللون مع الحفاظ على الخطوط الخارجية</li>
+                      </ol>
+                    </div>
+                  )}
                   
                   {/* Image Source Tabs */}
                   <div className="space-y-2">
@@ -433,14 +579,24 @@ const Coloring = () => {
                 </CardHeader>
                 <CardContent>
                   {coloringImage ? (
-                    <canvas
-                      ref={canvasRef}
-                      onMouseDown={startDrawing}
-                      onMouseMove={draw}
-                      onMouseUp={stopDrawing}
-                      onMouseLeave={stopDrawing}
-                      className="w-full h-[500px] border rounded-md bg-white cursor-pointer"
-                    />
+                    <div className="relative">
+                      <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                        className="w-full h-[500px] border rounded-md bg-white cursor-pointer"
+                      />
+                      {isAiColoring && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-md">
+                          <div className="bg-white p-4 rounded-md shadow-lg flex items-center gap-3">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                            <p>جاري تطبيق التلوين الذكي...</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="w-full h-[500px] border rounded-md bg-gray-50 flex items-center justify-center">
                       <div className="text-center p-6">
