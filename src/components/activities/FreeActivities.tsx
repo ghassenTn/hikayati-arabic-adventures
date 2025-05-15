@@ -20,6 +20,10 @@ type Question = {
   correctAnswer: string;
 };
 
+interface FreeActivitiesProps {
+  ageRange: string;
+}
+
 const domains = [
   {
     id: "language",
@@ -47,24 +51,41 @@ const domains = [
   }
 ];
 
+// Get age-appropriate difficulty level
+const getAgeAppropriateLevel = (ageRange: string): string => {
+  switch (ageRange) {
+    case "3-6": return "بسيط جداً ومناسب للأطفال من 3-6 سنوات";
+    case "7-9": return "سهل ومناسب للأطفال من 7-9 سنوات";
+    case "10-12": return "متوسط الصعوبة ومناسب للأطفال من 10-12 سنة";
+    case "13-15": return "متقدم ومناسب للأطفال من 13-15 سنة";
+    default: return "متنوع المستوى ومناسب لجميع الأعمار";
+  }
+};
+
 // Function to generate a new question based on the domain using AI
 const generateAIQuestion = async (
   domainId: string,
   apiKey: string,
-  previousQuestions: string[]
+  previousQuestions: string[],
+  ageRange: string
 ): Promise<Question> => {
   try {
-    // Prepare content based on domain
+    // Get difficulty level based on age
+    const difficultyLevel = getAgeAppropriateLevel(ageRange);
+    
+    // Prepare content based on domain with Tunisia focus
     const domainContent = {
-      language: "اللغة العربية وقواعدها والنحو والصرف والبلاغة",
-      science: "العلوم والفيزياء والكيمياء والأحياء والفلك",
-      math: "الرياضيات والحساب والجبر والهندسة",
-      social: "الاجتماعيات والتاريخ والجغرافيا"
+      language: "اللغة العربية وقواعدها والنحو والصرف والبلاغة مع التركيز على اللهجة والثقافة التونسية",
+      science: "العلوم والفيزياء والكيمياء والأحياء والفلك مع التركيز على العلماء والاكتشافات التونسية",
+      math: "الرياضيات والحساب والجبر والهندسة مع أمثلة وتطبيقات من الحياة اليومية في تونس",
+      social: "الاجتماعيات والتاريخ والجغرافيا في تونس بما في ذلك الثقافة والتقاليد والمعالم السياحية"
     };
     
     // Generate question using Gemini API
     const prompt = `قم بإنشاء سؤال اختيار من متعدد تعليمي للأطفال عن ${domainContent[domainId as keyof typeof domainContent]}. 
     السؤال يجب أن يكون باللغة العربية مع 4 خيارات.
+    المستوى: ${difficultyLevel}
+    يجب أن يتضمن السؤال معلومات متعلقة بتونس وثقافتها وحضارتها وتاريخها.
     تأكد أن السؤال فريد وليس مكررًا من الأسئلة السابقة: ${previousQuestions.join(' | ')}
     قم بتنسيق الإجابة بشكل JSON فقط بالشكل التالي:
     {
@@ -93,14 +114,14 @@ const generateAIQuestion = async (
     // Fallback to a simple question if AI fails
     return {
       id: Date.now(),
-      question: `سؤال تلقائي حول ${domainId}؟`,
+      question: `سؤال تلقائي حول ${domainId} في تونس؟`,
       options: ["الخيار الأول", "الخيار الثاني", "الخيار الثالث", "الخيار الرابع"],
       correctAnswer: "الخيار الأول"
     };
   }
 };
 
-const FreeActivities = () => {
+const FreeActivities: React.FC<FreeActivitiesProps> = ({ ageRange }) => {
   const { apiKey } = useContext(GeminiContext);
   const [activeTab, setActiveTab] = useState("language");
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -121,10 +142,20 @@ const FreeActivities = () => {
     social: []
   });
 
-  // Generate a question when the tab changes or component first loads
+  // Generate a question when the tab changes or component first loads or age range changes
   useEffect(() => {
     generateNewQuestion();
-  }, [activeTab, apiKey]);
+  }, [activeTab, apiKey, ageRange]);
+
+  // Clear previous questions cache when age range changes
+  useEffect(() => {
+    previousQuestions.current = {
+      language: [],
+      science: [],
+      math: [],
+      social: []
+    };
+  }, [ageRange]);
 
   const generateNewQuestion = async () => {
     setLoading(true);
@@ -133,11 +164,12 @@ const FreeActivities = () => {
       const newQuestion = await generateAIQuestion(
         activeTab, 
         apiKey,
-        previousQuestions.current[activeTab] || []
+        previousQuestions.current[activeTab] || [],
+        ageRange
       );
       
       // Store this question to avoid repeating it
-      if (newQuestion.question !== `سؤال تلقائي حول ${activeTab}؟`) {
+      if (newQuestion.question !== `سؤال تلقائي حول ${activeTab} في تونس؟`) {
         previousQuestions.current = {
           ...previousQuestions.current,
           [activeTab]: [
@@ -191,11 +223,13 @@ const FreeActivities = () => {
   };
 
   return (
-    <section className="py-16 bg-muted/50">
+    <section className="py-8">
       <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center mb-4">أنشطة تعليمية مجانية</h2>
-        <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          اكتشف مجموعة متنوعة من الأنشطة التعليمية المجانية في مختلف المجالات لتعزيز مهارات الأطفال بطريقة ممتعة
+        <h2 className="text-2xl font-bold mb-4">أنشطة تعليمية لـ {
+          ageRange === "all" ? "جميع الأعمار" : `الفئة العمرية ${ageRange}`
+        }</h2>
+        <p className="text-muted-foreground mb-8">
+          أنشطة تعليمية مخصصة عن تونس وثقافتها في مختلف المجالات
         </p>
         
         <Tabs 
