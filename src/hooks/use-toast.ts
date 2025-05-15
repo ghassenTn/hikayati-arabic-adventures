@@ -8,13 +8,15 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
-import { useToast as useToastOriginal } from "@/components/ui/toast/use-toast"
+import { useToast as useToastOriginal, toast } from "@/components/ui/toast/use-toast"
 
-export const Toaster = ({ ...props }) => {
+export interface ToasterProps extends React.ComponentPropsWithoutRef<typeof ToastProvider> {}
+
+export const Toaster = ({ ...props }: ToasterProps) => {
   const { toasts } = useToastOriginal()
 
   return (
-    <ToastProvider>
+    <ToastProvider {...props}>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
@@ -34,5 +36,4 @@ export const Toaster = ({ ...props }) => {
   )
 }
 
-export const useToast = useToastOriginal
-export { toast } from "@/components/ui/toast/use-toast"
+export { useToast, toast } from "@/components/ui/toast/use-toast"

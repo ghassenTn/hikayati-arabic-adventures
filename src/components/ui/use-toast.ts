@@ -1,5 +1,5 @@
 
-// Updated to point to the correct import location
+// Re-export from the correct location
 import { useToast, toast } from "@/hooks/use-toast";
 
 export { useToast, toast };
