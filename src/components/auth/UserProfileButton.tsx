@@ -55,9 +55,6 @@ const UserProfileButton = () => {
         <DropdownMenuItem onClick={() => navigate("/profile")}>
           الملف الشخصي
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/settings")}>
-          الإعدادات
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           تسجيل الخروج

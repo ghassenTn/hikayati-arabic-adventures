@@ -17,9 +17,10 @@ import StoryDetail from "./pages/StoryDetail";
 import Analytics from "./pages/Analytics";
 import Chat from "./pages/Chat";
 import Coloring from "./pages/Coloring";
-import Activities from "./pages/Activities"; // Import the new Activities component
+import Activities from "./pages/Activities"; 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 // Create new QueryClient instance
@@ -67,7 +68,15 @@ const App = () => {
                   <Route path="/register" element={<Register />} />
                   <Route path="/stories" element={<StoryList />} />
                   <Route path="/coloring" element={<Coloring />} />
-                  <Route path="/activities" element={<Activities />} /> {/* Add new Activities route */}
+                  <Route path="/activities" element={<Activities />} />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route 
                     path="/create" 
                     element={
