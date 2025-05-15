@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { useContext } from "react";
 import { GeminiContext } from "@/App";
-import { Brush, Download, Eraser, RefreshCw, Square, Palette, BookOpen, PaintBucket } from "lucide-react";
+import { Brush, Download, Eraser, RefreshCw, Square, Palette, BookOpen, PaintBucket, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -147,7 +148,7 @@ const Coloring = () => {
           if (!canvasRef.current || !contextRef.current || !selectedArea) return;
           
           // Clear canvas and redraw the image
-          contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          contextRef.current.clearRect(0, 0, canvasRef.current.width / 2, canvasRef.current.height / 2);
           contextRef.current.drawImage(img, 0, 0, canvasRef.current.width / 2, canvasRef.current.height / 2);
           
           // Draw selection rectangle
@@ -194,28 +195,14 @@ const Coloring = () => {
       const startX = Math.min(selectedArea.startX, selectedArea.endX);
       const startY = Math.min(selectedArea.startY, selectedArea.endY);
       
-      // Create a temporary canvas to hold the selected area
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = width;
-      tempCanvas.height = height;
-      const tempCtx = tempCanvas.getContext('2d');
+      // Fill the area with the selected color
+      contextRef.current.fillStyle = activeColor;
+      contextRef.current.fillRect(startX, startY, width, height);
       
-      if (tempCtx) {
-        // Copy the selected area to the temporary canvas
-        tempCtx.drawImage(
-          canvasRef.current, 
-          startX * 2, startY * 2, width * 2, height * 2, // Source (multiply by 2 for retina display)
-          0, 0, width, height  // Destination
-        );
-        
-        // Fill the area with the selected color
-        contextRef.current.fillStyle = activeColor;
-        contextRef.current.fillRect(startX, startY, width, height);
-        
-        // Restore the black outlines by overlaying the original image
-        // (This is a simplified approach; in a real implementation, we would use computer vision to detect edges)
+      // Restore the black outlines by overlaying the original image
+      if (coloringImage) {
         const img = new Image();
-        img.src = coloringImage || '';
+        img.src = coloringImage;
         
         img.onload = () => {
           if (!contextRef.current || !canvasRef.current) return;
@@ -231,7 +218,7 @@ const Coloring = () => {
           
           toast({
             title: "تم التلوين",
-            description: "تم تلوين المنطقة المحددة باستخدام الذكاء الاصطناعي",
+            description: "تم تلوين المنطقة المحددة باللون المختار",
           });
         };
       }
@@ -239,7 +226,7 @@ const Coloring = () => {
       console.error("Error applying AI coloring:", error);
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء تطبيق التلوين الذكي",
+        description: "حدث خطأ أثناء تطبيق التلوين",
         variant: "destructive",
       });
     } finally {
@@ -252,6 +239,14 @@ const Coloring = () => {
     setCurrentTool(tool);
     setIsErasing(tool === "eraser");
     setSelectedArea(null); // Clear any selected area when changing tools
+    
+    // Show a toast with instructions when selecting AI color tool
+    if (tool === "ai-color") {
+      toast({
+        title: "أداة التلوين الذكي",
+        description: "اختر منطقة بالسحب والإفلات لتلوينها مع الحفاظ على الخطوط الخارجية",
+      });
+    }
   };
   
   const clearCanvas = () => {
@@ -435,8 +430,10 @@ const Coloring = () => {
                         size="icon"
                         onClick={() => handleToolChange("ai-color")}
                         title="تلوين ذكي"
+                        className="relative"
                       >
                         <PaintBucket size={18} />
+                        <Wand2 size={10} className="absolute top-0 right-0 text-primary" />
                       </Button>
                       <Button 
                         variant="outline"
@@ -490,12 +487,16 @@ const Coloring = () => {
                   
                   {/* Tool Instructions */}
                   {currentTool === "ai-color" && (
-                    <div className="bg-secondary/30 p-3 rounded-md text-sm">
-                      <p className="font-medium mb-1">كيفية استخدام التلوين الذكي:</p>
-                      <ol className="list-decimal list-inside space-y-1">
+                    <div className="bg-primary/20 p-4 rounded-md text-sm">
+                      <p className="font-medium mb-1 flex items-center">
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        التلوين الذكي بالذكاء الاصطناعي:
+                      </p>
+                      <ol className="list-decimal list-inside space-y-1 mr-4">
                         <li>اختر لونًا من لوحة الألوان</li>
-                        <li>انقر واسحب لتحديد المنطقة المراد تلوينها</li>
-                        <li>حرر الزر لتطبيق اللون مع الحفاظ على الخطوط الخارجية</li>
+                        <li>انقر واسحب لتحديد المنطقة</li>
+                        <li>حرر الزر لتطبيق اللون تلقائيًا</li>
+                        <li>سيتم الحفاظ على الخطوط الخارجية للرسمة</li>
                       </ol>
                     </div>
                   )}
@@ -575,7 +576,14 @@ const Coloring = () => {
             <div className="lg:col-span-9">
               <Card className="overflow-hidden">
                 <CardHeader>
-                  <CardTitle>منطقة الرسم</CardTitle>
+                  <CardTitle className="flex items-center">
+                    منطقة الرسم
+                    {currentTool === "ai-color" && (
+                      <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full mr-2">
+                        وضع التلوين الذكي نشط
+                      </span>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {coloringImage ? (
