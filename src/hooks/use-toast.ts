@@ -8,7 +8,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
-import { useToast as useToastOriginal } from "@/components/ui/use-toast"
+import { useToast as useToastOriginal } from "@/components/ui/toast/use-toast"
 
 export const Toaster = ({ ...props }) => {
   const { toasts } = useToastOriginal()
@@ -35,4 +35,4 @@ export const Toaster = ({ ...props }) => {
 }
 
 export const useToast = useToastOriginal
-export { toast } from "@/components/ui/use-toast"
+export { toast } from "@/components/ui/toast/use-toast"
